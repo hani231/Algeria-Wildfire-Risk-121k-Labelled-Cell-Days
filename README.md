@@ -1,9 +1,9 @@
 
 ## Project
 
-**Type:** School Data Mining Project\n
-**Domain:** Wildfire Risk Analysis\n
-**Dataset:** Algeria Wildfire Risk — 121k Labelled Cell-Days\n
+**Type:** School Data Mining Project
+**Domain:** Wildfire Risk Analysis
+**Dataset:** Algeria Wildfire Risk — 121k Labelled Cell-Days
 
 The project uses this dataset as a foundation for **exploratory data analysis, feature analysis, pattern discovery, and machine learning experiments**.
 
