@@ -16,7 +16,7 @@ page = st.sidebar.radio(
 
 # Link to the separate Update Test page
 st.sidebar.page_link(
-    "pages/1_Update_Test.py",
+    "1_Update_Test.py",
     label="🔄 Update Test"
 )
 
