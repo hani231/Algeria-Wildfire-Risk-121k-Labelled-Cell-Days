@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 st.set_page_config(
@@ -12,7 +11,7 @@ st.sidebar.title("Navigation")
 
 page = st.sidebar.radio(
     "Go to",
-    ["Project", "Dataset", "Team", "GitHub"]
+    ["Project", "Dataset", "Team", "GitHub", "Update Test"]
 )
 
 # Main title
@@ -103,9 +102,24 @@ elif page == "GitHub":
         "Algeria-Wildfire-Risk-121k-Labelled-Cell-Days"
     )
 
+# Update Test
+elif page == "Update Test":
+
+    st.header("🔄 Update Test")
+
+    st.success(
+        "This page was added through a GitHub update!"
+    )
+
+    st.write(
+        "If you can see this page on the deployed Streamlit application, "
+        "the automatic deployment is working."
+    )
+
+    st.write("Version: 1.0")
+
 st.divider()
 
 st.caption(
     "Algeria Wildfire Risk — Data Mining / Machine Learning — Classification"
 )
-
