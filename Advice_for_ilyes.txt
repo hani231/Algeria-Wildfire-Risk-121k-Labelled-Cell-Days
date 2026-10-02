@@ -1,5 +1,7 @@
 Hey Ilyes,
 
+First in the readme there is a link to the app click it to inspect , <<in first page of git at the top of readme >>.
+
 Here are some suggestions for the UI. Treat them as ideas, not rules. Change anything you want, you know the app better than anyone.
 
 THE MAIN IDEA
@@ -57,4 +59,4 @@ SMALL THINGS THAT SAVE TIME
 - Watch file sizes, because GitHub refuses files over 100 MB
 - Check that .gitignore doesn't block the data or the models
 
-That's it. Start simple, get one page working, and improve from there.
+That's it. Start simple, get one page working, and improve from there. GOOD LUCK :)
