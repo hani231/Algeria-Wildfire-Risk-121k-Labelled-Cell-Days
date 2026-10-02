@@ -1,5 +1,10 @@
-
 import streamlit as st
+
+st.set_page_config(
+    page_title="Update Test",
+    page_icon="🔄",
+    layout="wide"
+)
 
 st.title("🔄 Update Test")
 
@@ -11,4 +16,3 @@ st.write(
 )
 
 st.write("Version: 1.0")
-
