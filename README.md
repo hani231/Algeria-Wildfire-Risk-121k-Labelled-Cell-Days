@@ -5,8 +5,7 @@
 
 ## 🌐 Live Demo
 
-[Open the Streamlit application]([YOUR_STREAMLIT_URL](https://algeria-wildfire-risk-121k-labelled-cell-days-qshwfvpywdvl5gmx.streamlit.app/))
-
+[Open the Streamlit application](https://algeria-wildfire-risk-121k-labelled-cell-days-qshwfvpywdvl5gmx.streamlit.app/)
 ## 📌 Project
 
 Algeria Wildfire Risk is a Data Mining / Machine Learning project
