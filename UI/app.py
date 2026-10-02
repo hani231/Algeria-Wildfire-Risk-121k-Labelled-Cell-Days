@@ -14,10 +14,6 @@ page = st.sidebar.radio(
     ["Project", "Dataset", "Team", "GitHub"]
 )
 
-# Link to the separate Update Test page
-if st.sidebar.button("🔄 Update Test"):
-    st.switch_page("pages/1_Update_Test.py")
-
 # Main title
 st.title("Streamlit Test")
 st.subheader("🔥 Algeria Wildfire Risk")
