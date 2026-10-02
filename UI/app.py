@@ -104,6 +104,11 @@ elif page == "GitHub":
 
 st.divider()
 
+st.page_link(
+    "pages/1_Update_Test.py",
+    label="🔄 Go to Update Test"
+)
+
 st.caption(
     "Algeria Wildfire Risk — Data Mining / Machine Learning — Classification"
 )
