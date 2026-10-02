@@ -1,6 +1,18 @@
 
 ## Project
 
+# Algeria Wildfire Risk
+
+## 🌐 Live Demo
+
+[Open the Streamlit application]([YOUR_STREAMLIT_URL](https://algeria-wildfire-risk-121k-labelled-cell-days-qshwfvpywdvl5gmx.streamlit.app/))
+
+## 📌 Project
+
+Algeria Wildfire Risk is a Data Mining / Machine Learning project
+focused on wildfire risk classification in Algeria.
+
+
 **Type:** School Data Mining Project
 **Domain:** Wildfire Risk Analysis
 **Dataset:** Algeria Wildfire Risk — 121k Labelled Cell-Days
