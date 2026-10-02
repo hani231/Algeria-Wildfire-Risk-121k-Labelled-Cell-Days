@@ -11,7 +11,13 @@ st.sidebar.title("Navigation")
 
 page = st.sidebar.radio(
     "Go to",
-    ["Project", "Dataset", "Team", "GitHub", "Update Test"]
+    ["Project", "Dataset", "Team", "GitHub"]
+)
+
+# Link to the separate Update Test page
+st.sidebar.page_link(
+    "pages/1_Update_Test.py",
+    label="🔄 Update Test"
 )
 
 # Main title
@@ -101,22 +107,6 @@ elif page == "GitHub":
         "https://github.com/hani231/"
         "Algeria-Wildfire-Risk-121k-Labelled-Cell-Days"
     )
-
-# Update Test
-elif page == "Update Test":
-
-    st.header("🔄 Update Test")
-
-    st.success(
-        "This page was added through a GitHub update!"
-    )
-
-    st.write(
-        "If you can see this page on the deployed Streamlit application, "
-        "the automatic deployment is working."
-    )
-
-    st.write("Version: 1.0")
 
 st.divider()
 
