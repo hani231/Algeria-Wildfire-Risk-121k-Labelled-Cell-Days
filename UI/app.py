@@ -15,10 +15,8 @@ page = st.sidebar.radio(
 )
 
 # Link to the separate Update Test page
-st.sidebar.page_link(
-    "1_Update_Test.py",
-    label="🔄 Update Test"
-)
+if st.sidebar.button("🔄 Update Test"):
+    st.switch_page("pages/1_Update_Test.py")
 
 # Main title
 st.title("Streamlit Test")
