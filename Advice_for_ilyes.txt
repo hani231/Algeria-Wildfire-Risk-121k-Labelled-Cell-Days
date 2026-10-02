@@ -1,0 +1,60 @@
+Hey Ilyes,
+
+Here are some suggestions for the UI. Treat them as ideas, not rules. Change anything you want, you know the app better than anyone.
+
+THE MAIN IDEA
+The app should only show things: load the data, load saved models, display results. Training models inside the app would make it slow, so I'd keep training in notebooks.
+
+FOLDERS (our repo, roughly)
+- Dataset/dataset.csv
+- UI/app.py and UI/pages/
+- Later, probably: Models/ (saved models) and Results/ (metrics, predictions)
+
+Since those folders sit outside UI/, a small helper makes paths easy. Create UI/utils/paths.py:
+
+    from pathlib import Path
+    ROOT = Path(__file__).resolve().parents[2]
+    DATASET_PATH = ROOT / "Dataset" / "dataset.csv"
+    MODELS_DIR = ROOT / "Models"
+    RESULTS_DIR = ROOT / "Results"
+
+Then import from it everywhere. Avoid paths from your own computer, because they break on Streamlit Cloud (and folder names are case-sensitive there).
+
+LOADING DATA
+Cache it, otherwise the CSV reloads on every click:
+
+    @st.cache_data
+    def load_data():
+        return pd.read_csv(DATASET_PATH)
+
+PAGES YOU COULD BUILD
+- Dataset Explorer: row/column counts, preview, stats, missing values, and filters in the sidebar (region, date, fire/no fire).
+- Visualizations + map: a few Plotly charts and a risk map colored green to red.
+- Model Comparison: one table and a bar chart of the models' metrics.
+- Model Details: ONE page with a selectbox to pick the model, instead of one page per model.
+- Predict: inputs on one side, predicted risk on the other.
+- Team and About pages.
+Start with the first one and add the rest as the team produces results. Only add a page to the navigation once its file exists.
+
+MODELS (talk to the team about this)
+It helps a lot if everyone saves their model the same way, so the app can load any of them:
+- save the whole sklearn Pipeline with joblib
+- use the same train/test split
+- write the metrics in one shared file (one row per model)
+- use the same scikit-learn version everywhere
+Exact details are up to you and the team. The point is just to agree on one format.
+Wildfires are rare events, so accuracy can be misleading. Showing recall and F1 next to it is a good idea.
+
+LOOKING GOOD, QUICKLY
+- layout="wide" and st.columns / st.tabs / st.metric cards
+- a theme in .streamlit/config.toml (repo root) with one main color, like fire orange
+- same header on every page, and a short caption explaining each number
+- aggregate or sample before plotting, not all 121k points
+
+SMALL THINGS THAT SAVE TIME
+- Run it locally before pushing: streamlit run UI/app.py
+- Add every new library to requirements.txt
+- Watch file sizes, because GitHub refuses files over 100 MB
+- Check that .gitignore doesn't block the data or the models
+
+That's it. Start simple, get one page working, and improve from there.
