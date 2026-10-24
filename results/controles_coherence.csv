@@ -1,0 +1,17 @@
+,nombre
+dates_invalides,0
+cible_invalide,0
+ordre_temperature_incoherent,0
+ordre_humidite_incoherent,0
+ordre_vent_incoherent,0
+year_incoherent,0
+doy_incoherent,0
+rh_min_hors_0_100,0
+rh_mean_hors_0_100,0
+wind_max_negatif,0
+wind_mean_negatif,0
+precip_sum_negatif,0
+precip_7d_negatif,0
+precip_30d_negatif,0
+ndvi_hors_moins1_1,0
+ndvi_normal_hors_moins1_1,0

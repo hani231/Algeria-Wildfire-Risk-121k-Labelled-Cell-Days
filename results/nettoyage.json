@@ -1,0 +1,12 @@
+{
+  "lignes_avant": 121869,
+  "colonnes_avant": 37,
+  "doublons_exacts_supprimes": 0,
+  "colonnes_fuite_exclues": [
+    "sample_kind",
+    "n_detections",
+    "max_frp"
+  ],
+  "lignes_apres": 121869,
+  "colonnes_apres": 34
+}

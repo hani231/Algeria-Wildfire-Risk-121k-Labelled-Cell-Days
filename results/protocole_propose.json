@@ -1,0 +1,44 @@
+{
+  "statut": "proposition_a_harmoniser",
+  "train": "2012-2023",
+  "validation": "2024",
+  "test_reserve": "2025",
+  "cv_annees_validation": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+  ],
+  "metrique_principale": "f1_classe_1",
+  "features": [
+    "temp_max",
+    "temp_min",
+    "temp_mean",
+    "rh_min",
+    "rh_mean",
+    "wind_max",
+    "wind_mean",
+    "precip_sum",
+    "vpd_max",
+    "precip_7d",
+    "precip_30d",
+    "days_since_rain_1mm",
+    "temp_max_7d_mean",
+    "rh_min_7d_mean",
+    "ffmc",
+    "dmc",
+    "dc",
+    "isi",
+    "bui",
+    "fwi",
+    "ndvi",
+    "ndvi_change_32d",
+    "ndvi_stale_days",
+    "doy"
+  ],
+  "best_params": {
+    "model__var_smoothing": 0.01
+  },
+  "sklearn_version": "1.8.0"
+}

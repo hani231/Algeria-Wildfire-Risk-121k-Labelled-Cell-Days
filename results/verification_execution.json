@@ -1,0 +1,12 @@
+[
+  {
+    "notebook": "01_eda_and_cleaning.ipynb",
+    "cellules_python_executees": 12,
+    "erreurs": 0
+  },
+  {
+    "notebook": "03_zeror_naive_bayes.ipynb",
+    "cellules_python_executees": 9,
+    "erreurs": 0
+  }
+]
