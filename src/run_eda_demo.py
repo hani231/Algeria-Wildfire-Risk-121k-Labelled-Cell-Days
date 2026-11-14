@@ -21,4 +21,9 @@ path = next((p for p in candidates if p.exists()), None)
 if path is None:
     st.error('Copier dataset.csv dans data/raw/ ou Dataset/, ou exécuter le notebook 01.')
     st.stop()
-render_eda(load_data(str(path), path.stat().st_mtime_ns))
+try:
+    data = load_data(str(path), path.stat().st_mtime_ns)
+except (ValueError, OSError, pd.errors.ParserError) as exc:
+    st.error(f'Impossible de préparer les données : {exc}')
+    st.stop()
+render_eda(data)
