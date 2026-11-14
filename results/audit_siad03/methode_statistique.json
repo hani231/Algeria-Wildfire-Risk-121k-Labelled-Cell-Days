@@ -1,0 +1,14 @@
+{
+  "population": "train 2012-2023 uniquement",
+  "h0": "P(écart annuel > 0 | écart non nul) = 0.5",
+  "h1": "P(écart annuel > 0 | écart non nul) != 0.5",
+  "test": "binomial exact bilatéral sur les signes annuels",
+  "correction": "Holm, famille de deux tests par analyse",
+  "sensibilite": "zone/année/mois, exploratoire post hoc, ne remplace pas le principal",
+  "limites": [
+    "Indépendance des signes annuels non démontrée",
+    "Même mois ne garantit pas un appariement météorologique complet",
+    "Négatifs sélectionnés ; ni causalité ni risque absolu",
+    "IC sur la proportion de signes positifs, pas sur la taille de l’effet"
+  ]
+}
