@@ -1,0 +1,49 @@
+{
+  "base_commit": "d8d06a9469c4ccdf0b51c24cbd5a961816da7e76",
+  "branch": "feature/SIAD03-audit-eda",
+  "python": "3.12.14",
+  "test_2025_evaluated": false,
+  "committed": false,
+  "pushed": false,
+  "notebooks": [
+    {
+      "notebook": "01_eda_and_cleaning.ipynb",
+      "code_cells": 12,
+      "seconds": 15.37,
+      "errors": 0,
+      "execution": "Python sequential cells; Jupyter kernel unavailable"
+    },
+    {
+      "notebook": "03_zeror_naive_bayes.ipynb",
+      "code_cells": 9,
+      "seconds": 21.81,
+      "errors": 0,
+      "execution": "Python sequential cells; Jupyter kernel unavailable"
+    }
+  ],
+  "pytest": {
+    "errors": "0",
+    "failures": "0",
+    "skipped": "0",
+    "tests": "31",
+    "time": "12.235"
+  },
+  "installation": "venv sans system-site-packages ; requirements-dev exacts installés ; pip check OK",
+  "limitations": [
+    "Pas de noyau Jupyter: cellules exécutées séquentiellement en Python",
+    "Pas de test navigateur manuel Windows",
+    "Artefact arbre 1.9.1 chargé sous 1.8.0 avec avertissement; métriques reproduites",
+    "Projet global incomplet: trois classifieurs et application finale manquants"
+  ],
+  "copie_fraiche": {
+    "base": "d8d06a9469c4ccdf0b51c24cbd5a961816da7e76",
+    "patch_applique": true,
+    "pytest": {
+      "passed": 31,
+      "failed": 0
+    },
+    "audit_et_statistiques_reexecutes": true,
+    "metriques_existantes_reproduites": true
+  },
+  "provenance": "Rapport historique fourni dans corrections_SIAD03.zip ; non réexécuté pendant cette intégration."
+}
