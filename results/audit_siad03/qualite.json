@@ -1,0 +1,51 @@
+{
+  "lignes_avant": 121869,
+  "colonnes_avant": 37,
+  "doublons_exacts_supprimes": 0,
+  "controles_coherence": {
+    "valeurs_infinies": 0,
+    "rh_min_hors_limites": 0,
+    "rh_mean_hors_limites": 0,
+    "rh_min_7d_mean_hors_limites": 0,
+    "ndvi_hors_limites": 0,
+    "ndvi_normal_hors_limites": 0,
+    "lat_hors_limites": 0,
+    "lon_hors_limites": 0,
+    "wind_max_negatif": 0,
+    "wind_mean_negatif": 0,
+    "precip_sum_negatif": 0,
+    "precip_7d_negatif": 0,
+    "precip_30d_negatif": 0,
+    "days_since_rain_1mm_negatif": 0,
+    "days_since_last_fire_negatif": 0,
+    "ndvi_stale_days_negatif": 0,
+    "temp_min_superieur_temp_mean": 0,
+    "temp_mean_superieur_temp_max": 0,
+    "temp_min_superieur_temp_max": 0,
+    "rh_min_superieur_rh_mean": 0,
+    "wind_mean_superieur_wind_max": 0
+  },
+  "colonnes_fuite_exclues": [
+    "sample_kind",
+    "n_detections",
+    "max_frp"
+  ],
+  "lignes_apres": 121869,
+  "colonnes_apres": 34,
+  "source": "Dataset/dataset.csv",
+  "sha256_brut": "cc260f954f76651c745c688c51e962a5fdbc4ee92d487ecd5577ba2aff7ecc26",
+  "zones": 1423,
+  "debut": "2012-06-01",
+  "fin": "2025-10-31",
+  "lignes_par_partition": {
+    "test": 8467,
+    "train": 104979,
+    "val": 8423
+  },
+  "effectifs_train": {
+    "0": 76393,
+    "1": 28586
+  },
+  "controles_appris_sur_test": false,
+  "code_special_9999": 5965
+}
