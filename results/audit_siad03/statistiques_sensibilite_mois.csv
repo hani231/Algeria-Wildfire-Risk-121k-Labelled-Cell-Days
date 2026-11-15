@@ -1,0 +1,3 @@
+variable,annees_non_nulles,annees_ecart_positif,ecart_annuel_moyen,ecart_annuel_min,ecart_annuel_max,p_brute,proportion_positive,ic95_proportion_bas,ic95_proportion_haut,annees_sans_paire,annees_ecart_nul,p_holm
+temp_max,12,12,2.307109817786374,0.7369363743252629,3.095140014923348,0.00048828125,1.0,0.7353515306029488,1.0,0,0,0.0009765625
+rh_mean,12,0,-9.590881113226546,-12.466409063109332,-5.389700741645186,0.00048828125,0.0,0.0,0.26464846939705117,0,0,0.0009765625

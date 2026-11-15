@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv*/
+.ipynb_checkpoints/
+.streamlit/secrets.toml
+results/local_runs/

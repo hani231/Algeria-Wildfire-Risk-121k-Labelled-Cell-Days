@@ -1,0 +1,62 @@
+{
+  "base_commit": "d8d06a9469c4ccdf0b51c24cbd5a961816da7e76",
+  "clean_csv_equivalent": true,
+  "five_temporal_folds_verified": true,
+  "principal_statistics_reproduced": true,
+  "sklearn_runtime": "1.8.0",
+  "validation_2024_reproduced": [
+    {
+      "model": "Zero-R",
+      "accuracy": 0.9236614033004867,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "roc_auc": 0.5,
+      "average_precision": 0.07633859669951323,
+      "confusion_tn_fp_fn_tp": [
+        7780,
+        0,
+        643,
+        0
+      ],
+      "warnings": []
+    },
+    {
+      "model": "GaussianNB",
+      "accuracy": 0.4810637540068859,
+      "precision": 0.1005143591941706,
+      "recall": 0.7293934681181959,
+      "f1": 0.17668110755321154,
+      "roc_auc": 0.6298688266360688,
+      "average_precision": 0.11964601644450971,
+      "confusion_tn_fp_fn_tp": [
+        3583,
+        4197,
+        174,
+        469
+      ],
+      "warnings": []
+    },
+    {
+      "model": "DecisionTree",
+      "accuracy": 0.5571649056155764,
+      "precision": 0.09583660644147683,
+      "recall": 0.5692068429237948,
+      "f1": 0.1640519946212461,
+      "roc_auc": 0.6092418051629772,
+      "average_precision": 0.10103981157617743,
+      "confusion_tn_fp_fn_tp": [
+        4327,
+        3453,
+        277,
+        366
+      ],
+      "warnings": [
+        "Trying to unpickle estimator SimpleImputer from version 1.9.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+        "Trying to unpickle estimator DecisionTreeClassifier from version 1.9.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+        "Trying to unpickle estimator Pipeline from version 1.9.1 when using version 1.8.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+      ]
+    }
+  ],
+  "test_2025_evaluated": false
+}
