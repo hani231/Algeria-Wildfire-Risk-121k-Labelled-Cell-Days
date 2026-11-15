@@ -1,0 +1,12 @@
+...............................................                          [100%]
+=============================== warnings summary ===============================
+tests/siad03_extensions/test_dashboard.py::test_scientific_dashboard_empty_filter_and_metrics
+tests/siad03_extensions/test_dashboard.py::test_scientific_dashboard_empty_filter_and_metrics
+tests/test_eda.py::test_real_dashboard_filters_and_empty_result
+tests/test_eda.py::test_real_dashboard_filters_and_empty_result
+tests/test_eda.py::test_constant_and_missing_variable_dashboard
+  /workspace/.venvs/wildfire/lib/python3.12/site-packages/seaborn/categorical.py:700: PendingDeprecationWarning: vert: bool will be deprecated in a future version. Use orientation: {'vertical', 'horizontal'} instead.
+    artists = ax.bxp(**boxplot_kws)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+47 passed, 5 warnings in 15.19s

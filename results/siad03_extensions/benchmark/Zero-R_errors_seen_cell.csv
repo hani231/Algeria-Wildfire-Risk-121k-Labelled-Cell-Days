@@ -1,0 +1,2 @@
+group,n,positives,tn,fp,fn,tp,accuracy,precision,recall,f1,specificity,balanced_accuracy,mcc,roc_auc,average_precision,brier
+True,8423,643,7780,0,643,0,0.9236614033004867,0.0,0.0,0.0,1.0,0.5,0.0,0.5,0.07633859669951323,0.07633859669951323
