@@ -1,0 +1,21 @@
+{
+  "LogisticRegression": {
+    "best_params": {
+      "logisticregression__C": 100,
+      "logisticregression__class_weight": "balanced"
+    },
+    "cv_f1": 0.4262477918555507,
+    "seconds": 16.668588787999965,
+    "candidates": 6
+  },
+  "HistGradientBoosting": {
+    "best_params": {
+      "class_weight": "balanced",
+      "l2_regularization": 0,
+      "max_leaf_nodes": 15
+    },
+    "cv_f1": 0.43566460595855905,
+    "seconds": 41.23372618299999,
+    "candidates": 8
+  }
+}
