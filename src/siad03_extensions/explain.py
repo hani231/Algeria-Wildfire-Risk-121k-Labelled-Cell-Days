@@ -53,7 +53,7 @@ def run(benchmark, output):
         score = predictions[name]
         p,r,_ = precision_recall_curve(predictions.label, score)
         fpr,tpr,_ = roc_curve(predictions.label,score)
-        axes[0].plot(r,p,label=name); axes[1].plot(fpr,tpr,label=name)
+        axes[0].step(r,p,where='post',label=name); axes[1].plot(fpr,tpr,label=name)
         cal = pd.read_csv(benchmark/f'{name}_calibration.csv')
         axes[2].plot(cal.predicted,cal.observed,marker='o',label=name)
     axes[0].axhline(predictions.label.mean(),color='gray',ls='--')

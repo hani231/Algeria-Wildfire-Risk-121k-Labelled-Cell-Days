@@ -1,0 +1,11 @@
+{
+  "base": "0b49805",
+  "all_original_tracked_files_unchanged": true,
+  "original_file_count": 71,
+  "tests_passed": 47,
+  "warnings": "5 Seaborn PendingDeprecationWarning; historique arbre : sklearn 1.9.1 vers 1.8.0",
+  "raw_sha256": "cc260f954f76651c745c688c51e962a5fdbc4ee92d487ecd5577ba2aff7ecc26",
+  "test_2025_evaluated": false,
+  "full_search_fits": 70,
+  "new_models_reload_verified": true
+}
