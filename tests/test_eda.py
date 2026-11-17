@@ -23,6 +23,10 @@ def test_real_dashboard_filters_and_empty_result():
     assert len(app.exception) == 0
     assert app.metric[0].value == '104,979'
     assert len(app.dataframe) == 2
+    assert [tab.label for tab in app.tabs] == [
+        'Vue d’ensemble', 'Distributions', 'Relations entre variables'
+    ]
+    assert len(app.subheader) == 5
     app.slider(key='eda_years').set_range(2020, 2023).run()
     assert len(app.exception) == 0
     assert int(app.metric[0].value.replace(',', '')) < 104979
