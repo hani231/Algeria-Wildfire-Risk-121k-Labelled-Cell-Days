@@ -1,5 +1,6 @@
 """Vue EDA intégrable : tous les panneaux partagent l'entraînement filtré."""
 
+from src.ui.units import measure_label
 import altair as alt
 import pandas as pd
 import streamlit as st
@@ -38,7 +39,7 @@ def _plot_distributions(filtered, numeric):
         sample_frame = sample.rename('mesure').to_frame()
         base = alt.Chart(sample_frame)
         hist = base.mark_bar(color='#7765F5').encode(
-            x=alt.X('mesure:Q', bin=alt.Bin(maxbins=30), title=variable),
+            x=alt.X('mesure:Q', bin=alt.Bin(maxbins=30), title=measure_label(variable)),
             y=alt.Y('count():Q', title='Effectif'),
             tooltip=[alt.Tooltip('count():Q', title='Observations')])
         if sample.nunique() > 1:
@@ -46,7 +47,7 @@ def _plot_distributions(filtered, numeric):
                 color='#22D3EE').encode(x='mesure:Q', y=alt.Y('densité:Q', title='Densité KDE'))
             hist = (hist + density).resolve_scale(y='independent')
         st.altair_chart(hist.properties(height=250), width='stretch')
-    st.caption('Histogramme et KDE sur au plus 5 000 valeurs. La KDE décrit la '
+    st.caption(f'{measure_label(variable)} · {len(sample):,} valeurs tracées sur {len(values):,} présentes. La KDE décrit la '
                'distribution des mesures, pas une probabilité d’incendie.')
     box_data = filtered[['label', variable]].dropna()
     if not box_data.empty:
@@ -152,9 +153,13 @@ def render_eda(df, standalone=True):
             else:
                 pairs = corr.rename_axis('Variable').reset_index().melt(
                     id_vars='Variable', var_name='Comparaison', value_name='Coefficient')
+                present = filtered[selected].notna().astype('int64')
+                shared = (present.T @ present).rename_axis('Variable').reset_index().melt(
+                    id_vars='Variable', var_name='Comparaison', value_name='Paires complètes')
+                pairs = pairs.merge(shared, on=['Variable', 'Comparaison'])
                 heatmap = alt.Chart(pairs).mark_rect().encode(
                     x=alt.X('Variable:N', sort=selected), y=alt.Y('Comparaison:N', sort=selected),
                     color=alt.Color('Coefficient:Q', scale=alt.Scale(domain=[-1, 1], scheme='redblue')),
-                    tooltip=['Variable', 'Comparaison', alt.Tooltip('Coefficient:Q', format='.3f')])
+                    tooltip=['Variable', 'Comparaison', 'Paires complètes:Q', alt.Tooltip('Coefficient:Q', format='.3f')])
                 st.altair_chart(heatmap, width='stretch')
         st.caption('Une corrélation décrit une association, sans démontrer une cause.')

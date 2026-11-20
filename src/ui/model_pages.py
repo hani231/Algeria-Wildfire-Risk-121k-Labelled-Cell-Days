@@ -2,7 +2,7 @@
 import pandas as pd
 import streamlit as st
 from src.ui.curves import curves
-from src.ui.services import ARTIFACTS, comparison, input_summary, pipeline, classify
+from src.ui.services import BENCH, NB, ROOT, ARTIFACTS, comparison, input_summary, pipeline, classify
 from src.ui.units import measure_label
 
 DESCRIPTIONS = {
@@ -31,15 +31,45 @@ def models():
         leaders = ordered.index[ordered[metric].eq(ordered[metric].max())]
         st.metric(', '.join(leaders), f'{ordered[metric].max():.3f}')
         st.caption('Le rappel mesure la part de détections retrouvées. La précision mesure la part d’alertes correctes. AP résume la courbe précision-rappel.')
+    with st.expander('Disponibilité et origine des résultats', expanded=True):
+        rows = []
+        mandatory = ('Zero-R', 'K-NN', 'DecisionTree', 'Random Forest', 'GaussianNB', 'SVM')
+        for candidate in dict.fromkeys([*mandatory, *table.index]):
+            status = 'En attente'
+            source = '—'
+            if candidate in table.index:
+                batch = NB if candidate in ('GaussianNB', 'Zero-R') else BENCH
+                source = str((batch/'metrics.csv').relative_to(ROOT))
+                if candidate == 'DecisionTree':
+                    status = 'Scores disponibles · pipeline incompatible (1.9.1)'
+                elif candidate in ARTIFACTS and ARTIFACTS[candidate].is_file():
+                    status = 'Résultats et artefact disponibles'
+                else:
+                    status = 'Scores disponibles · pipeline absent'
+            rows.append({'Classifieur': candidate,
+                         'Catégorie': 'Obligatoire' if candidate in mandatory else 'Supplémentaire',
+                         'Disponibilité': status, 'Lot de validation': source})
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch')
     with st.expander('Table complète des métriques'):
         st.dataframe(table[metrics].round(3), width='stretch')
     st.divider()
     name = st.selectbox('Inspecter un modèle', table.index)
     st.write(DESCRIPTIONS[name])
+    if name == 'GaussianNB':
+        legacy = pd.read_csv(BENCH/'metrics.csv').set_index('model').loc[name]
+        st.caption(f"run_01 · F1 = {table.loc[name, 'f1']:.6f} (14 réglages). "
+                   f"Expérience historique · F1 = {legacy.f1:.6f} (7 réglages). "
+                   "Le classement utilise le lot reproductible sélectionné sur les plis d’entraînement.")
     row = table.loc[name]
     matrix = pd.DataFrame([[row.tn,row.fp],[row.fn,row.tp]], dtype=int,
                           index=['Réel 0','Réel 1'], columns=['Prédit 0','Prédit 1'])
     st.table(matrix)
+    st.caption(f'{int(row.fp):,} faux positifs : une détection annoncée sur un jour étiqueté 0. '
+               f'{int(row.fn):,} faux négatifs : une détection manquée. '
+               'Un rappel élevé réduit la part de détections manquées. Le F1 ignore les coûts opérationnels.')
+    if name == 'Zero-R':
+        st.write('La classe majoritaire est 0. Prédire toujours 0 donne une accuracy élevée '
+                 'sur cet échantillon déséquilibré et un rappel nul pour les détections.')
     curves(name)
     if name == 'DecisionTree':
         st.info('Arbre historique enregistré avec scikit-learn 1.9.1. Réentraînement requis pour la saisie interactive en 1.8.0.')

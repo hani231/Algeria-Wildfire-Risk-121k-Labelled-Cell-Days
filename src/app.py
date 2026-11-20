@@ -13,6 +13,10 @@ from src.ui.shell import heading, navigation
 st.set_page_config(page_title='Wildfire Atlas · Algérie', page_icon='🌐', layout='wide')
 pages = {'Accueil': overview, 'Exploration': explore, 'Carte': geography,
          'Modèles': models, 'Prédiction': prediction, 'Méthodologie': methodology}
+# Conserver les filtres des espaces momentanément démontés par Streamlit.
+for key in list(st.session_state):
+    if key.startswith(('eda_', 'range_', 'map_')):
+        st.session_state[key] = st.session_state[key]
 page = navigation()
 heading(page)
 try:
