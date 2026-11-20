@@ -2,7 +2,8 @@
 import pandas as pd
 import streamlit as st
 from src.ui.curves import curves
-from src.ui.services import ARTIFACTS, comparison, training, pipeline, classify
+from src.ui.services import ARTIFACTS, comparison, input_summary, pipeline, classify
+from src.ui.units import measure_label
 
 DESCRIPTIONS = {
     'Zero-R': 'Prédit la classe majoritaire du train.',
@@ -63,8 +64,7 @@ def prediction():
     name = st.selectbox('Pipeline', names)
     model = pipeline(name)
     features = list(model.feature_names_in_)
-    data = training()[features]
-    example = data.dropna().iloc[0]
+    summary = input_summary(tuple(features))
     settings, result = st.columns([1.7, 1])
     with settings.form('predict'):
         st.subheader('Mesures de la cellule-jour')
@@ -75,13 +75,13 @@ def prediction():
             with st.expander(title, expanded=title == 'Météo du jour'):
                 columns = st.columns(2)
                 for i, key in enumerate(keys):
-                    series = data[key]
-                    params = dict(min_value=float(series.min()), max_value=float(series.max()),
-                                  value=float(example[key]), format='%.4f')
+                    limits = summary.loc[key]
+                    params = dict(min_value=float(limits.minimum), max_value=float(limits.maximum),
+                                  value=float(limits.initial), format='%.4f')
                     if key in ('doy','ndvi_stale_days','days_since_rain_1mm'):
-                        params = dict(min_value=int(series.min()), max_value=int(series.max()),
-                                      value=int(example[key]), step=1)
-                    values[key] = columns[i % 2].number_input(key, **params)
+                        params = dict(min_value=int(limits.minimum), max_value=int(limits.maximum),
+                                      value=int(limits.initial), step=1)
+                    values[key] = columns[i % 2].number_input(measure_label(key), **params)
         submitted = st.form_submit_button('Prédire', type='primary')
     with result.container(border=True):
         st.subheader('Lecture du résultat')
@@ -95,7 +95,8 @@ def prediction():
             st.error(str(error))
             return
         st.metric('Classe estimée', '1 · Avec détection' if label else '0 · Sans détection')
-        st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
+        if score is not None:
+            st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
         st.caption('Classification rétrospective. La calibration et l’échantillonnage limitent son interprétation comme risque territorial.')
         with st.expander('Mesures utilisées'):
             st.table(pd.Series(values, name='Valeur'))
