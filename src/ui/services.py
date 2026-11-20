@@ -1,5 +1,9 @@
 """Données et pipelines versionnés pour l'interface SIAD03."""
 import json
+import warnings
+from pickle import UnpicklingError
+from sklearn.exceptions import InconsistentVersionWarning
+from src.data_quality import coherence_counts
 import joblib
 import numpy as np
 import pandas as pd
@@ -17,7 +21,7 @@ ARTIFACTS = {
 }
 
 
-@st.cache_data
+@st.cache_data(show_spinner='Chargement des observations d’entraînement…')
 def training():
     return load_development()[0]
 
@@ -30,12 +34,24 @@ def comparison():
                      ignore_index=True).set_index('model')
 
 
-@st.cache_resource
 def pipeline(name):
-    model = joblib.load(ARTIFACTS[name])
+    path = ARTIFACTS[name]
+    return _load_pipeline(path, path.stat().st_mtime_ns)
+
+
+@st.cache_resource(show_spinner='Lecture du pipeline sauvegardé…')
+def _load_pipeline(path, modified):
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', InconsistentVersionWarning)
+            model = joblib.load(path)
+    except (InconsistentVersionWarning, EOFError, UnpicklingError, ImportError, AttributeError, KeyError) as error:
+        raise ValueError(f'Artefact incompatible ou illisible ({path.name}) : {error}') from error
     protocol = validate_protocol(json.loads((ROOT / 'results/protocole_propose.json').read_text()))
-    if list(model.feature_names_in_) != protocol['features']:
+    if list(getattr(model, 'feature_names_in_', [])) != protocol['features']:
         raise ValueError('Le schéma du modèle diffère du protocole.')
+    if set(getattr(model, 'classes_', [])) != {0, 1} or not callable(getattr(model, 'predict', None)):
+        raise ValueError('Pipeline incompatible avec la classification binaire.')
     return model
 
 
@@ -43,13 +59,30 @@ def classify(model, values):
     columns = list(model.feature_names_in_)
     if set(values) != set(columns):
         raise ValueError('Entrées incomplètes ou inattendues.')
-    frame = pd.DataFrame([values], columns=columns, dtype=float)
+    try:
+        frame = pd.DataFrame([values], columns=columns, dtype=float)
+    except (TypeError, ValueError) as error:
+        raise ValueError('Chaque mesure doit être numérique.') from error
     if not np.isfinite(frame).all().all():
-        raise ValueError('Une valeur numérique est invalide.')
-    for low, high in [('temp_min','temp_mean'), ('temp_mean','temp_max'),
-                      ('rh_min','rh_mean'), ('wind_mean','wind_max')]:
-        if values[low] > values[high]:
-            raise ValueError(f'{low} doit être inférieur ou égal à {high}.')
+        raise ValueError('Chaque mesure doit être renseignée et finie.')
+    violations = [key.replace('_', ' ') for key, count in coherence_counts(frame).items() if count]
+    if violations:
+        raise ValueError('Mesures physiquement incohérentes : ' + ', '.join(violations))
+    for key in ('doy', 'ndvi_stale_days', 'days_since_rain_1mm'):
+        if not frame.at[0, key].is_integer():
+            raise ValueError(f'{key} doit être un nombre entier de jours.')
+    if not 1 <= frame.at[0, 'doy'] <= 366:
+        raise ValueError('Le jour de l’année doit être compris entre 1 et 366.')
     label = int(model.predict(frame)[0])
+    if not hasattr(model, 'predict_proba'):
+        return label, None
     score = float(model.predict_proba(frame)[0, list(model.classes_).index(1)])
     return label, score
+
+@st.cache_data
+def input_summary(features):
+    data = training()[list(features)]
+    complete = data.dropna()
+    if complete.empty:
+        raise ValueError('Aucune observation complète pour initialiser les mesures du formulaire.')
+    return pd.DataFrame({'initial': complete.iloc[0], 'minimum': data.min(), 'maximum': data.max()})

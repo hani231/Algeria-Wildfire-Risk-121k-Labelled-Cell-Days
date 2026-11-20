@@ -1,3 +1,5 @@
+> Archive du premier lot personnel. Pour lancer le projet intégré, suivre le [guide actuel](INTERFACE.md).
+
 # Ton parcours de travail : données, analyses et deux modèles
 
 Commence par le notebook `notebooks/01_eda_and_cleaning.ipynb`. Chaque bloc comporte une explication,

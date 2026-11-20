@@ -10,6 +10,11 @@ from src.ui.services import training
 
 
 def summarize_cells(view):
+    if not (view.lat.between(-90, 90) & view.lon.between(-180, 180)).all():
+        raise ValueError('Coordonnées manquantes ou hors limites dans la sélection.')
+    positions = view.groupby('cell_id')[['lat', 'lon']].nunique()
+    if positions.gt(1).any().any():
+        raise ValueError('Plusieurs positions pour une même cellule dans la sélection.')
     cells = view.groupby('cell_id', as_index=False).agg(
         lat=('lat', 'first'), lon=('lon', 'first'),
         observations=('label', 'size'), positives=('label', 'sum'))
@@ -19,6 +24,11 @@ def summarize_cells(view):
     cells['couleur'] = [[int(34 + 221*x), int(211-110*x), int(238-161*x)] for x in fraction]
     cells['rayon'] = 600 + 100*np.sqrt(cells.observations)
     return cells
+
+
+@st.cache_data
+def training_cells():
+    return summarize_cells(training())
 
 
 def territory(cells, height=400):
@@ -42,8 +52,11 @@ def geography():
     controls, spatial = st.columns([1, 2.5])
     with controls:
         st.subheader('Période et couverture')
+        if data.empty:
+            st.info('Aucune observation d’entraînement disponible pour la carte.')
+            return
         first, last = int(data.year.min()), int(data.year.max())
-        years = st.slider('Années', first, last, (first, last), key='map_years')
+        years = (first, last) if first == last else st.slider('Années', first, last, (first, last), key='map_years')
         months = sorted(data.date.dt.month.unique().tolist())
         selected = st.multiselect('Mois observés', months, default=months, key='map_months')
         view = data.loc[data.year.between(*years) & data.date.dt.month.isin(selected)]
@@ -52,7 +65,8 @@ def geography():
             return
         cells = summarize_cells(view)
         st.metric('Cellules couvertes', f'{len(cells):,}')
-        st.metric('Jours-cellules avec détection', f'{int(cells.positives.sum()):,}')
+        st.metric('Cellules-jours sans détection', f'{int(cells.negatives.sum()):,}')
+        st.metric('Cellules-jours avec détection', f'{int(cells.positives.sum()):,}')
     with spatial:
         territory(cells, height=460)
     with st.expander('Consulter les coordonnées et les effectifs'):

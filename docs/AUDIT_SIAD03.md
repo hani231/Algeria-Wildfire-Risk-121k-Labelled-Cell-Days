@@ -1,6 +1,14 @@
-> Document historique fourni dans corrections_SIAD03.zip. Les indications « aucun commit », les commandes d’intégration et les validations de notebooks concernent le lot d’origine. Pour cette intégration locale, consulter le README et l’historique Git ; aucun push effectué.
-
 # Audit et plan de rattrapage — 14 novembre 2026
+
+> Archive du premier lot. Les résultats et les indications Git ci-dessous décrivent le HEAD audité à cette date.
+
+## Actualisation après la fusion de la PR #7
+
+La base examinée est `3f37a5d`. Les PR #5 à #7 ont intégré l’application, les vues scientifiques et les six espaces Wildfire Atlas. Le contrôle des critères reprend les sections 1.1 à 4.2 du [cahier officiel, source e3a19ef](https://github.com/hosniadilemp-a11y/DataMiningProjectPage/blob/e3a19efa610228e3d7615cc8182f6a097db820ab/mini_project_proposal.pdf). Les preuves et responsabilités restantes figurent dans la [matrice](MATRICE_CONFORMITE.csv).
+
+Le contrôle des chemins suivis ne relève aucun fichier .env, clé privée usuelle, bytecode ou cache pytest. Le projet conserve un CSV brut et deux exports dérivés historiques. Le lancement utilise le brut. Les notebooks et le dashboard scientifique autonome utilisent encore les bibliothèques graphiques du projet. Le lot UI n’ajoute aucune dépendance. Le guide personnel porte désormais un code étudiant. Le nom du fichier et le contenu du plan de travail collectif sont à anonymiser avec ses auteurs avant le rendu.
+
+
 
 ## Portée et verdict
 

@@ -2,7 +2,8 @@
 import pandas as pd
 import streamlit as st
 from src.ui.curves import curves
-from src.ui.services import ARTIFACTS, comparison, training, pipeline, classify
+from src.ui.services import BENCH, NB, ROOT, ARTIFACTS, comparison, input_summary, pipeline, classify
+from src.ui.units import measure_label
 
 DESCRIPTIONS = {
     'Zero-R': 'Prédit la classe majoritaire du train.',
@@ -30,15 +31,45 @@ def models():
         leaders = ordered.index[ordered[metric].eq(ordered[metric].max())]
         st.metric(', '.join(leaders), f'{ordered[metric].max():.3f}')
         st.caption('Le rappel mesure la part de détections retrouvées. La précision mesure la part d’alertes correctes. AP résume la courbe précision-rappel.')
+    with st.expander('Disponibilité et origine des résultats', expanded=True):
+        rows = []
+        mandatory = ('Zero-R', 'K-NN', 'DecisionTree', 'Random Forest', 'GaussianNB', 'SVM')
+        for candidate in dict.fromkeys([*mandatory, *table.index]):
+            status = 'En attente'
+            source = '—'
+            if candidate in table.index:
+                batch = NB if candidate in ('GaussianNB', 'Zero-R') else BENCH
+                source = str((batch/'metrics.csv').relative_to(ROOT))
+                if candidate == 'DecisionTree':
+                    status = 'Scores disponibles · pipeline incompatible (1.9.1)'
+                elif candidate in ARTIFACTS and ARTIFACTS[candidate].is_file():
+                    status = 'Résultats et artefact disponibles'
+                else:
+                    status = 'Scores disponibles · pipeline absent'
+            rows.append({'Classifieur': candidate,
+                         'Catégorie': 'Obligatoire' if candidate in mandatory else 'Supplémentaire',
+                         'Disponibilité': status, 'Lot de validation': source})
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch')
     with st.expander('Table complète des métriques'):
         st.dataframe(table[metrics].round(3), width='stretch')
     st.divider()
     name = st.selectbox('Inspecter un modèle', table.index)
     st.write(DESCRIPTIONS[name])
+    if name == 'GaussianNB':
+        legacy = pd.read_csv(BENCH/'metrics.csv').set_index('model').loc[name]
+        st.caption(f"run_01 · F1 = {table.loc[name, 'f1']:.6f} (14 réglages). "
+                   f"Expérience historique · F1 = {legacy.f1:.6f} (7 réglages). "
+                   "Le classement utilise le lot reproductible sélectionné sur les plis d’entraînement.")
     row = table.loc[name]
     matrix = pd.DataFrame([[row.tn,row.fp],[row.fn,row.tp]], dtype=int,
                           index=['Réel 0','Réel 1'], columns=['Prédit 0','Prédit 1'])
     st.table(matrix)
+    st.caption(f'{int(row.fp):,} faux positifs : une détection annoncée sur un jour étiqueté 0. '
+               f'{int(row.fn):,} faux négatifs : une détection manquée. '
+               'Un rappel élevé réduit la part de détections manquées. Le F1 ignore les coûts opérationnels.')
+    if name == 'Zero-R':
+        st.write('La classe majoritaire est 0. Prédire toujours 0 donne une accuracy élevée '
+                 'sur cet échantillon déséquilibré et un rappel nul pour les détections.')
     curves(name)
     if name == 'DecisionTree':
         st.info('Arbre historique enregistré avec scikit-learn 1.9.1. Réentraînement requis pour la saisie interactive en 1.8.0.')
@@ -63,8 +94,7 @@ def prediction():
     name = st.selectbox('Pipeline', names)
     model = pipeline(name)
     features = list(model.feature_names_in_)
-    data = training()[features]
-    example = data.dropna().iloc[0]
+    summary = input_summary(tuple(features))
     settings, result = st.columns([1.7, 1])
     with settings.form('predict'):
         st.subheader('Mesures de la cellule-jour')
@@ -75,13 +105,13 @@ def prediction():
             with st.expander(title, expanded=title == 'Météo du jour'):
                 columns = st.columns(2)
                 for i, key in enumerate(keys):
-                    series = data[key]
-                    params = dict(min_value=float(series.min()), max_value=float(series.max()),
-                                  value=float(example[key]), format='%.4f')
+                    limits = summary.loc[key]
+                    params = dict(min_value=float(limits.minimum), max_value=float(limits.maximum),
+                                  value=float(limits.initial), format='%.4f')
                     if key in ('doy','ndvi_stale_days','days_since_rain_1mm'):
-                        params = dict(min_value=int(series.min()), max_value=int(series.max()),
-                                      value=int(example[key]), step=1)
-                    values[key] = columns[i % 2].number_input(key, **params)
+                        params = dict(min_value=int(limits.minimum), max_value=int(limits.maximum),
+                                      value=int(limits.initial), step=1)
+                    values[key] = columns[i % 2].number_input(measure_label(key), **params)
         submitted = st.form_submit_button('Prédire', type='primary')
     with result.container(border=True):
         st.subheader('Lecture du résultat')
@@ -95,7 +125,8 @@ def prediction():
             st.error(str(error))
             return
         st.metric('Classe estimée', '1 · Avec détection' if label else '0 · Sans détection')
-        st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
+        if score is not None:
+            st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
         st.caption('Classification rétrospective. La calibration et l’échantillonnage limitent son interprétation comme risque territorial.')
         with st.expander('Mesures utilisées'):
             st.table(pd.Series(values, name='Valeur'))

@@ -2,9 +2,9 @@
 import json
 import pandas as pd
 import streamlit as st
-from src.ui.geography import summarize_cells, territory
+from src.ui.geography import training_cells, territory
 from src.eda_view import render_eda
-from src.ui.services import ROOT, ARTIFACTS, comparison, training, pipeline, classify
+from src.ui.services import ROOT, training
 
 
 def navigate(page):
@@ -16,7 +16,7 @@ def overview():
     spatial, summary = st.columns([2.2, 1])
     with spatial:
         st.subheader('Empreinte des observations')
-        territory(summarize_cells(training()), height=310)
+        territory(training_cells(), height=310)
         st.button('Ouvrir la carte', on_click=navigate, args=('Carte',))
     with summary:
         st.subheader('Couverture du CSV')
@@ -68,13 +68,13 @@ def statistics():
     folder = ROOT/'results/audit_siad03'
     stats = pd.read_csv(folder/f'statistiques_{suffix}.csv').set_index('variable')
     gaps = pd.read_csv(folder/f'ecarts_{suffix}.csv').set_index('annee')
-    st.caption('Test exact des signes sur les années. Sous H0, un écart annuel non nul a autant de chances d’être positif que négatif. Correction de Holm pour deux tests.')
+    st.caption('Test exact des signes sur les années. Sous H0, un écart annuel non nul a autant de chances d’être positif que négatif. H1 bilatérale : les deux signes ont des probabilités différentes. Holm ajuste les deux p-values de chaque analyse pour limiter le risque de rejeter à tort au moins une hypothèse vraie dans cette famille.')
     for col, (var, title, unit) in zip(st.columns(2), [('temp_max','Température maximale','unités du CSV'),('rh_mean','Humidité moyenne','points')]):
         row = stats.loc[var]
         col.metric(title, f'{row.ecart_annuel_moyen:+.2f} {unit}', border=True)
         col.line_chart(gaps[[var]])
-        col.caption(f'p ajustée = {row.p_holm:.6f} · {int(row.annees_non_nulles)} années à écart non nul')
-    st.write('En moyenne, les jours avec détection sont plus chauds et moins humides dans cet échantillon. La dépendance entre saisons limite l’interprétation des tests.')
+        col.caption(f'p brute = {row.p_brute:.8f} · p ajustée = {row.p_holm:.6f} · {int(row.annees_non_nulles)} années à écart non nul')
+    st.write('En moyenne, les jours avec détection sont plus chauds et moins humides dans cet échantillon. La sensibilité mensuelle contrôle aussi le mois. La dépendance entre années limite l’interprétation des tests. Ces associations ne démontrent pas une causalité.')
 
 
 def methodology():
