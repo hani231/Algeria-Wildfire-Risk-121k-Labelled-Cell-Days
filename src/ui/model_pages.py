@@ -1,6 +1,7 @@
 """Comparer les résultats puis interroger les pipelines entraînés."""
 import pandas as pd
 import streamlit as st
+from src.ui.curves import curves
 from src.ui.services import ARTIFACTS, comparison, training, pipeline, classify
 
 DESCRIPTIONS = {
@@ -18,6 +19,10 @@ def models():
     table = comparison()
     metrics = ['accuracy','precision','recall','f1','roc_auc','average_precision']
     metric = st.selectbox('Comparer par', metrics, index=3)
+    st.metric(f'Meilleur score sur 2024 · {metric}', f'{table[metric].max():.3f}',
+              help=', '.join(table.index[table[metric].eq(table[metric].max())]))
+    st.write('En tête : ' + ', '.join(table.index[table[metric].eq(table[metric].max())]))
+    st.caption('Le rappel mesure la part de détections retrouvées. La précision mesure la part d’alertes correctes. AP résume la courbe précision-rappel.')
     st.bar_chart(table[[metric]], horizontal=True, color='#c45a31')
     st.dataframe(table[metrics].round(3), width='stretch')
     name = st.selectbox('Fiche modèle', table.index)
@@ -26,6 +31,7 @@ def models():
     matrix = pd.DataFrame([[row.tn,row.fp],[row.fn,row.tp]], dtype=int,
                           index=['Réel 0','Réel 1'], columns=['Prédit 0','Prédit 1'])
     st.table(matrix)
+    curves(name)
     if name == 'DecisionTree':
         st.info('Arbre historique enregistré avec scikit-learn 1.9.1. Réentraînement requis pour la saisie interactive en 1.8.0.')
         search = pd.read_csv(ARTIFACTS['GaussianNB'].parents[2]/'recherche_arbre_decision.csv')
@@ -53,12 +59,20 @@ def prediction():
     data = training()[features]
     example = data.dropna().iloc[0]
     with st.form('predict'):
-        columns = st.columns(3)
         values = {}
-        for i, key in enumerate(features):
-            low, high = float(data[key].min()), float(data[key].max())
-            values[key] = columns[i % 3].number_input(key, min_value=low, max_value=high,
-                                                      value=float(example[key]), format='%.4f')
+        groups = {'Météo du jour': features[:9], 'Historique météo': features[9:14],
+                  'Indices de feu': features[14:20], 'Végétation et saison': features[20:]}
+        for title, keys in groups.items():
+            with st.expander(title, expanded=title == 'Météo du jour'):
+                columns = st.columns(2)
+                for i, key in enumerate(keys):
+                    series = data[key]
+                    params = dict(min_value=float(series.min()), max_value=float(series.max()),
+                                  value=float(example[key]), format='%.4f')
+                    if key in ('doy','ndvi_stale_days','days_since_rain_1mm'):
+                        params = dict(min_value=int(series.min()), max_value=int(series.max()),
+                                      value=int(example[key]), step=1)
+                    values[key] = columns[i % 2].number_input(key, **params)
         submitted = st.form_submit_button('Prédire', type='primary')
     if submitted:
         label, score = classify(model, values)

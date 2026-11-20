@@ -25,3 +25,13 @@ Les tableaux utilisent la validation 2024 ; 2025 reste réservé. Les tuiles gé
 diagnostics avancés restent accessibles dans le dashboard scientifique autonome.
 
 Captures de l’accueil : [ordinateur](interface-bureau.png) · [mobile](interface-mobile.png).
+
+La page **Carte** regroupe les cellules-jours du train par zone après sélection des années et des mois.
+Le survol affiche les effectifs avec et sans détection. Rayon et couleur décrivent l’échantillon.
+Le fond cartographique nécessite une connexion réseau ; les effectifs restent consultables dans le tableau.
+
+Dans **Exploration**, préparer le téléchargement CSV exporte la sélection active. Survoler la matrice de Spearman affiche le coefficient de chaque paire.
+Dans **Modèles**, le classement utilise la métrique choisie. ROC et précision-rappel proviennent des scores sauvegardés sur 2024 ; la précision moyenne (AP) résume la seconde courbe.
+Le formulaire regroupe les entrées en météo, historique, indices de feu et végétation/saison.
+
+[Capture tablette](interface-tablette.png)
