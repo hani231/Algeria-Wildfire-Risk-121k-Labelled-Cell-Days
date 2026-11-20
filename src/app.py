@@ -8,16 +8,21 @@ from src.ui.pages import overview, explore, statistics, methodology
 from src.ui.geography import geography
 from src.ui.model_pages import models, prediction
 
-st.set_page_config(page_title='Atlas des détections · Algérie', page_icon='🔥', layout='wide')
-st.sidebar.title('Atlas des détections')
-st.sidebar.caption('ALGÉRIE · CELLULES-JOURS')
-pages = {'Accueil': overview, 'Exploration': explore, 'Carte': geography, 'Statistiques': statistics,
+from src.ui.shell import heading, navigation
+
+st.set_page_config(page_title='Wildfire Atlas · Algérie', page_icon='🌐', layout='wide')
+pages = {'Accueil': overview, 'Exploration': explore, 'Carte': geography,
          'Modèles': models, 'Prédiction': prediction, 'Méthodologie': methodology}
-icons = {'Accueil':'◉', 'Exploration':'▦', 'Statistiques':'∑', 'Modèles':'▥',
-         'Prédiction':'◎', 'Méthodologie':'≡', 'Carte':'⌖'}
-page = st.sidebar.radio('Navigation', list(pages), key='page',
-                        format_func=lambda name: f'{icons[name]}  {name}')
+page = navigation()
+heading(page)
 try:
-    pages[page]()
+    if page == 'Méthodologie':
+        protocol, analysis = st.tabs(['Protocole et qualité', 'Analyses appariées'])
+        with protocol:
+            methodology()
+        with analysis:
+            statistics()
+    else:
+        pages[page]()
 except (OSError, ValueError, KeyError) as error:
     st.error(f'Impossible d’afficher le résultat. {error}')

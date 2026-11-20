@@ -1,0 +1,20 @@
+.stApp {background:radial-gradient(ellipse at 77% 0%,#1b2241 0,transparent 44rem),#0b1020}
+[data-testid="stSidebar"] {background:#101627;border-right:1px solid #303953}
+.block-container {max-width:1480px;padding-top:3.7rem;padding-bottom:3rem}
+.atlas-brand {display:flex;align-items:center;gap:.8rem;font:700 1.15rem system-ui;letter-spacing:-.04em;margin-bottom:2rem}
+.atlas-brand i {width:2.25rem;height:2.25rem;border-radius:50%;background:repeating-radial-gradient(ellipse at 26% 80%,#101627 0px 3px,#a89aff 4px 6px);border:1px solid #a89aff}
+.atlas-brand span {color:#a79bff}
+[data-testid="stSidebar"] [role="radiogroup"] {gap:.35rem}
+[data-testid="stSidebar"] [role="radiogroup"] label {padding:.55rem .75rem;border:1px solid transparent;border-radius:9px;transition:background .15s ease}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {background:#272344;border-color:#63579a}
+[data-testid="stSidebar"] [role="radiogroup"] label:hover {background:#202840}
+[data-testid="stMetric"] {background:linear-gradient(125deg,#1d2741,#151c30);border:1px solid #38445f;border-radius:14px;padding:1rem 1.2rem}
+[data-testid="stMetricValue"] {font-variant-numeric:tabular-nums;letter-spacing:-.05em}
+h1 {letter-spacing:-.055em;line-height:1.05}
+h2,h3 {letter-spacing:-.03em}
+.atlas-heading {padding:0 0 1rem;border-bottom:1px solid #35405a;margin-bottom:.5rem}
+.atlas-heading small {color:#95ddeb;letter-spacing:.14em;font:600 .73rem monospace;text-transform:uppercase}
+.atlas-heading h1 {font-size:clamp(2.25rem,5vw,4.25rem);padding:.4rem 0}
+.atlas-heading p {color:#b9c4dc;margin:0;max-width:65ch}
+@media(max-width:640px){.block-container{padding:3.25rem 1rem 2rem}.atlas-heading h1{font-size:2.4rem}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}

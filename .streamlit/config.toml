@@ -1,9 +1,10 @@
 [theme]
 base = "dark"
-primaryColor = "#FF975F"
-backgroundColor = "#111820"
-secondaryBackgroundColor = "#202C38"
-textColor = "#F5F5EF"
-borderColor = "#455665"
+primaryColor = "#7765F5"
+backgroundColor = "#0B1020"
+secondaryBackgroundColor = "#151C30"
+textColor = "#F5F7FF"
+borderColor = "#303953"
 showWidgetBorder = true
 baseRadius = "medium"
+chartCategoricalColors = ["#22D3EE", "#FF654D", "#A99DFF", "#B9F46B"]
