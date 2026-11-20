@@ -15,8 +15,10 @@ SECTIONS = {
 def navigation():
     st.html('<style>' + Path(__file__).with_name('atlas.css').read_text() + '</style>')
     st.sidebar.html('<div class="atlas-brand"><i aria-hidden="true"></i>Wildfire <span>Atlas</span></div>')
+    icons = dict(zip(SECTIONS, ['space_dashboard', 'query_stats', 'public', 'leaderboard',
+                               'tune', 'science']))
     return st.sidebar.radio('Espaces de travail', SECTIONS.keys(), key='page',
-                            format_func=lambda key: SECTIONS[key][0])
+                            format_func=lambda key: f":material/{icons[key]}: {SECTIONS[key][0]}")
 
 
 def heading(page):

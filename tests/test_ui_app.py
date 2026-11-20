@@ -5,7 +5,7 @@ from src.ui.services import ROOT, ARTIFACTS, pipeline, training
 def test_navigation_and_real_prediction():
     app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=60).run()
     assert not app.exception and not app.error
-    for page in ('Exploration','Carte','Statistiques','Modèles','Méthodologie','Prédiction'):
+    for page in ('Exploration','Carte','Modèles','Méthodologie','Prédiction'):
         app.radio(key='page').set_value(page).run()
         assert not app.exception and not app.error, page
     app.button[0].click().run()
@@ -39,3 +39,25 @@ def test_curves_use_matching_validation_scores():
         roc, pr = curve_points(name)
         assert np.isclose(auc(roc.iloc[:, 0], roc.iloc[:, 1]), row.roc_auc)
         assert np.isclose(-np.sum(np.diff(pr.Rappel) * pr.Précision.iloc[:-1]), row.average_precision)
+
+
+def test_all_deployed_pipelines_in_studio():
+    app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=60).run()
+    app.radio(key='page').set_value('Prédiction').run()
+    for name, artifact in ARTIFACTS.items():
+        if artifact.is_file():
+            app.selectbox[0].set_value(name).run()
+            app.button[0].click().run()
+            model = pipeline(name)
+            example = training()[list(model.feature_names_in_)].dropna().iloc[:1]
+            assert not app.exception and not app.error
+            assert app.metric[0].value.startswith(str(model.predict(example)[0]))
+
+
+def test_scientific_insights_preserves_monthly_pairing():
+    app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=60).run()
+    app.radio(key='page').set_value('Méthodologie').run()
+    assert 'Analyses appariées' in [tab.label for tab in app.tabs]
+    next(item for item in app.radio if item.label == 'Appariement').set_value('sensibilite_mois').run()
+    assert not app.exception and not app.error
+    assert any('p ajustée' in item.value for item in app.caption)
