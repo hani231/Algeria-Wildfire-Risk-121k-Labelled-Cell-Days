@@ -2,6 +2,7 @@
 import json
 import pandas as pd
 import streamlit as st
+from src.ui.geography import summarize_cells, territory
 from src.eda_view import render_eda
 from src.ui.services import ROOT, ARTIFACTS, comparison, training, pipeline, classify
 
@@ -12,25 +13,32 @@ def navigate(page):
 
 def overview():
     audit = json.loads((ROOT/'results/audit_siad03/qualite.json').read_text())
-    st.title('Les détections d’incendie en Algérie')
-    st.write('Une cellule-jour associe une zone géographique à une date. La cible indique si un incendie y a été détecté ce jour-là.')
-    cols = st.columns(4)
-    cols[-1].metric('Avec détection · train', f"{audit['effectifs_train']['1']:,}", border=True)
-    for col, label, key in zip(cols, ['Cellules-jours', 'Colonnes brutes', 'Zones'], ['lignes_avant','colonnes_avant','zones']):
-        col.metric(label, f'{audit[key]:,}', border=True)
-    st.caption(f"Période observée du {audit['debut']} au {audit['fin']}.")
+    spatial, summary = st.columns([2.2, 1])
+    with spatial:
+        st.subheader('Empreinte des observations')
+        territory(summarize_cells(training()), height=310)
+        st.button('Ouvrir la carte', on_click=navigate, args=('Carte',))
+    with summary:
+        st.subheader('Couverture du CSV')
+        st.metric('Cellules-jours', f"{audit['lignes_avant']:,}")
+        st.metric('Zones échantillonnées', f"{audit['zones']:,}")
+        st.caption(f"Du {audit['debut']} au {audit['fin']}. Carte limitée à l’entraînement.")
     annual = pd.read_csv(ROOT/'results/siad03_extensions/exploration/annual.csv').set_index('year')
-    st.subheader('Évolution des saisons observées')
-    st.line_chart(annual[['n', 'detections']].rename(columns={'n':'Cellules-jours', 'detections':'Avec détection'}), color=['#FF975F', '#55C5C0'])
-    st.caption('Période d’entraînement · effectifs annuels dans l’échantillon.')
-    a, b = st.columns(2)
-    a.subheader('Classes dans l’entraînement')
-    a.bar_chart(pd.Series(audit['effectifs_train']).rename(index={'0':'Sans détection','1':'Avec détection'}), color='#c45a31')
-    b.subheader('Validation 2024')
-    b.metric('Pipelines disponibles pour la saisie', sum(p.is_file() for p in ARTIFACTS.values()))
-    b.dataframe(comparison()[['f1','recall']].round(3), width='stretch')
-    a.button('Explorer les observations', on_click=navigate, args=('Exploration',))
-    b.button('Classer une observation', on_click=navigate, args=('Prédiction',))
+    annual['Sans détection'] = annual.n - annual.detections
+    trend, actions = st.columns([2.2, 1])
+    with trend:
+        st.subheader('Saisons de détection')
+        st.area_chart(annual.rename(columns={'detections':'Avec détection'})[['Avec détection','Sans détection']],
+                      color=['#FF654D','#7765F5'], height=220)
+        st.caption('Effectifs annuels dans l’échantillon d’entraînement.')
+    with actions:
+        st.subheader('Classes du train')
+        counts = audit['effectifs_train']
+        share = counts['1'] / sum(counts.values())
+        st.progress(share, text=f"{share:.1%} avec détection")
+        st.write(f"{counts['1']:,} avec détection · {counts['0']:,} sans détection")
+        st.button('Explorer les observations', on_click=navigate, args=('Exploration',))
+        st.button('Classer une observation', on_click=navigate, args=('Prédiction',))
 
 
 def reset_filters():
@@ -53,7 +61,7 @@ def explore():
 
 
 def statistics():
-    st.title('Température et humidité les jours de détection')
+    st.subheader('Température et humidité les jours de détection')
     st.write('Dans une même zone et une même année, les jours avec détection sont-ils plus chauds ou plus secs ?')
     suffix = st.radio('Appariement', ['principal','sensibilite_mois'], horizontal=True,
                       format_func=lambda s: 'Zone et année' if s=='principal' else 'Zone, année et mois')
@@ -70,13 +78,15 @@ def statistics():
 
 
 def methodology():
-    st.title('Méthodologie')
+    st.subheader('Origine des observations')
     st.write('Les observations proviennent du jeu Algeria Wildfire Risk publié sur Kaggle. Les négatifs sélectionnés limitent l’interprétation des proportions à cet échantillon.')
     st.link_button('Source des données', 'https://www.kaggle.com/datasets/abdelmaleknedjar/algeria-wildfire-risk-121k-labelled-cell-days')
     st.subheader('Du CSV à la classification')
     st.write('Le nettoyage vérifie les dates et les clés zone/jour, traite les doublons et retire sample_kind, n_detections et max_frp. Les transformations apprises restent dans les pipelines.')
     st.write('Entraînement 2012–2023, cinq plis temporels, validation 2024. Le test 2025 est réservé. La météo du jour sert à une classification rétrospective.')
     audit = json.loads((ROOT/'results/audit_siad03/qualite.json').read_text())
+    for column, (split, period) in zip(st.columns(3), [('train','Train · 2012–2023'), ('val','Validation · 2024'), ('test','Réservé · 2025')]):
+        column.metric(period, f"{audit['lignes_par_partition'][split]:,}")
     st.subheader('Contrôles de cohérence du CSV')
     st.dataframe(pd.Series(audit['controles_coherence'], name='Anomalies'), width='stretch')
     config = json.loads((ROOT/'results/protocole_propose.json').read_text())
