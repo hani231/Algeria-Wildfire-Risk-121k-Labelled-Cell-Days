@@ -1,5 +1,8 @@
 > Document historique fourni dans corrections_SIAD03.zip. Les indications « aucun commit », les commandes d’intégration et les validations de notebooks concernent le lot d’origine. Pour cette intégration locale, consulter le README et l’historique Git ; aucun push effectué.
 
+> Audit historique du premier lot. Depuis les PR #5 à #7, six espaces Streamlit et quatre pipelines interactifs sont disponibles. Le bilan courant et les preuves sont dans la [matrice](MATRICE_CONFORMITE.csv) et la [contribution](contributions/SIAD03.md).
+
+
 # Audit et plan de rattrapage — 14 novembre 2026
 
 ## Portée et verdict

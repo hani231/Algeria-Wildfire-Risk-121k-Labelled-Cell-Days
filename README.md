@@ -25,12 +25,10 @@ Les 24 entrées proposées figurent dans `results/protocole_propose.json`. `samp
 
 Environnement du lot SIAD03 : **Python 3.12.14**, scikit-learn **1.8.0**. L'ancien artefact de l'arbre utilise **1.9.1** : le réentraîner dans l'environnement commun avant intégration. Un chargement sans crash ne garantit pas la compatibilité.
 
-Les corrections sont intégrées dans la branche locale `feature/SIAD03-audit-eda`, sans push. Le [guide d’intégration](docs/INTEGRATION_SIAD03.md) décrit le lot d’origine.
-
 Sous PowerShell :
 
 ```powershell
-git clone https://github.com/lyesaitikhlef/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days.git
+git clone https://github.com/hani231/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days.git
 cd Algeria-Wildfire-Risk-121k-Labelled-Cell-Days
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
@@ -38,7 +36,7 @@ py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m src.audit_data
 .\.venv\Scripts\python.exe -m src.verify_existing
 .\.venv\Scripts\python.exe -m src.statistical_analysis
-.\.venv\Scripts\python.exe -m streamlit run src/run_eda_demo.py
+.\.venv\Scripts\python.exe -m streamlit run src/app.py
 ```
 
 Sous Linux/macOS : créer l'environnement avec `python3.12 -m venv .venv`, puis employer `.venv/bin/python` à la place de `.\.venv\Scripts\python.exe`.
@@ -57,7 +55,7 @@ L'arbre dispose de la commande existante suivante, après harmonisation des vers
 .\.venv\Scripts\python.exe -m src.train_decision_tree
 ```
 
-NB recherche 7 valeurs de `var_smoothing`, l'arbre 48 combinaisons. Les cinq plis valident 2019 à 2023, en apprenant sur les années précédentes. Le F1 de classe 1 est la métrique de sélection proposée. Cette validation chronologique diffère d'un K-Fold classique : acceptation pédagogique à confirmer. **2025 reste réservé** jusqu'au gel des choix.
+Le notebook historique recherche 7 valeurs de `var_smoothing`, l'arbre 48 combinaisons. Les cinq plis valident 2019 à 2023, en apprenant sur les années précédentes. Le F1 de classe 1 est la métrique de sélection proposée. Cette validation chronologique diffère d'un K-Fold classique : acceptation pédagogique à confirmer. **2025 reste réservé** jusqu'au gel des choix.
 
 | Chemin | Rôle |
 |---|---|
@@ -67,23 +65,24 @@ NB recherche 7 valeurs de `var_smoothing`, l'arbre 48 combinaisons. Les cinq pli
 | `notebooks/` | EDA/nettoyage, Zero-R/NB |
 | `src/cleaning_guide.py`, `src/data_quality.py` | Nettoyage et contrôles |
 | `src/audit_data.py`, `src/statistical_analysis.py` | Audits et analyses reproductibles |
+| `src/app.py`, `src/ui/` | Navigation, cartes, présentation scientifique et intégration des modèles |
 | `src/eda_view.py`, `src/run_eda_demo.py` | Vue intégrable et démo |
 | `src/train_decision_tree.py` | Recherche et entraînement arbre |
 | `models/`, `results/`, `figures/` | Artefacts, métriques, figures |
 | `tests/` | Nettoyage, statistiques, interactions EDA |
 | `docs/` | Dictionnaire, audit, guides ; rapport final absent |
 
-`src/app.py`, `src/preprocessing.py`, `src/models.py`, les notebooks communs et `docs/Rapport_MiniProject.pdf` restent à intégrer.
+`src/preprocessing.py`, `src/models.py`, les notebooks communs et `docs/Rapport_MiniProject.pdf` restent à intégrer.
 
 ## 3. Rôles et contributions
 
 | Code | Responsabilités | Preuves présentes |
 |---|---|---|
-| SIAD03, confirmé | Données, nettoyage, EDA, statistiques, Zero-R/NB, vue EDA | Notebooks 01/03, scripts, résultats ; lot local documenté |
+| SIAD03, confirmé | Données, nettoyage, EDA, statistiques, Zero-R/NB, interface Wildfire Atlas | Notebooks 01/03, scripts, résultats ; six espaces Streamlit et tests |
 | IASD12, code historique à confirmer | Protocole, prétraitement, K-NN/SVM, consolidation | Initialisation et ancien notebook dans l'historique ; modèles absents au HEAD |
-| IASD17, code historique à confirmer | Arbre/RF, application, assemblage | Script et résultats de l'arbre ; RF et application manquantes |
+| IASD17, code historique à confirmer | Arbre/RF, application, assemblage | Script et résultats de l'arbre ; RF en attente |
 
-Chaque auteur doit comprendre, tester et commiter son travail. Le lot local n'est pas encore publié. Aucun historique n'est antidaté ou réattribué. Des supports anciens contiennent encore des identités : les anonymiser avant le rendu public, en conservant les originaux internes.
+Chaque auteur doit comprendre, tester et commiter son travail. Aucun historique n'est antidaté ou réattribué. Des supports anciens contiennent encore des identités : les anonymiser avant le rendu public, en conservant les originaux internes.
 
 ## 4. Résultats vérifiés et limites
 
@@ -92,13 +91,15 @@ Scores recalculés à partir des artefacts sur la **validation 2024**, pas sur l
 | Modèle | Accuracy | Précision 1 | Rappel 1 | F1 1 | ROC-AUC |
 |---|---:|---:|---:|---:|---:|
 | Zero-R | 0,9237 | 0,0000 | 0,0000 | 0,0000 | 0,5000 |
-| GaussianNB | 0,4811 | 0,1005 | 0,7294 | 0,1767 | 0,6299 |
+| GaussianNB (run_01) | 0,5060 | 0,0995 | 0,6796 | 0,1736 | 0,6314 |
+| LogisticRegression (supplémentaire) | 0,6006 | 0,1094 | 0,5925 | 0,1847 | 0,6355 |
+| HistGradientBoosting (supplémentaire) | 0,6418 | 0,1017 | 0,4712 | 0,1673 | 0,6207 |
 | DecisionTree | 0,5572 | 0,0958 | 0,5692 | 0,1641 | 0,6092 |
 | K-NN | — | — | — | — | — |
 | Random Forest | — | — | — | — | — |
 | SVM | — | — | — | — | — |
 
-Zero-R prédit toujours 0 et rate les 643 positifs ; précision à 0 par convention. NB en retrouve 469 avec 4 197 faux positifs. L'arbre en retrouve 366 avec 3 453 faux positifs. Ces performances sont conservées et discutées.
+Zero-R prédit toujours 0 et rate les 643 positifs ; précision à 0 par convention. Le GaussianNB présenté dans l’application retrouve 437 détections avec 3 955 faux positifs. Son F1 est 0,17358490566037735 pour le lot run_01 (14 réglages, var_smoothing = 1). Le benchmark historique utilise 7 réglages et obtient 0,17668110755321154. Le lot courant a été choisi pour sa traçabilité, avec sélection sur les cinq plis du train. L'arbre en retrouve 366 avec 3 453 faux positifs. Ces performances sont conservées et discutées.
 
 Les deux analyses principales utilisent les écarts annuels après appariement zone/année. Effets moyens : **+3,0769 unités CSV** de température et **−10,1067 points d'humidité**. Le complément zone/année/mois donne **+2,3071** et **−9,5909**. Chaque p-value principale ajustée par Holm vaut **0,0009765625**. L'indépendance des signes annuels n'est pas démontrée : résultats exploratoires, sans causalité ni risque absolu. L'audit détaille H0/H1 et les limites.
 
@@ -108,6 +109,6 @@ Références : [validation scikit-learn](https://scikit-learn.org/stable/modules
 
 ## Vérification de cette intégration
 
-La suite complète compte **32 tests réussis**, avec trois avertissements de dépréciation Seaborn. Les tests de nettoyage, de reproductibilité de l’audit, de statistiques et d’interface sont lancés avec `python -m pytest -q`. Les commandes `python -m src.audit_data`, `python -m src.statistical_analysis` et `python -m src.verify_existing` ont également réussi. La dernière ne calcule les scores que sur la validation 2024. Aucune évaluation du test 2025 n’est lancée.
+Depuis la racine, lancer `python -m pytest -q`. Les tests d’interface exercent les six espaces, les quatre pipelines compatibles, les filtres et les résultats versionnés. Les tests de qualité comparent les matrices sur 2024 et vérifient les saisies invalides. Les documents des premiers lots décrivent leur état à la date de rédaction.
 
-Les documents d’audit et d’intégration fournis dans l’archive décrivent une vérification antérieure ; leurs résultats historiques ne constituent pas une nouvelle exécution des notebooks. La compatibilité de l’ancien arbre sérialisé et le lancement manuel sous Windows restent à vérifier.
+[Contribution scientifique SIAD03](docs/contributions/SIAD03.md) · [Matrice de conformité](docs/MATRICE_CONFORMITE.csv)
