@@ -1,5 +1,6 @@
 """Vue EDA intégrable : tous les panneaux partagent l'entraînement filtré."""
 
+import altair as alt
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -101,6 +102,8 @@ def render_eda(df):
     overview, distributions, relations = st.tabs(
         ['Vue d’ensemble', 'Distributions', 'Relations entre variables'])
     with overview:
+        st.download_button("Exporter les observations filtrées", filtered.to_csv(index=False),
+                           file_name="observations_train.csv", mime="text/csv", on_click="ignore")
         with st.expander('Observations et évolution temporelle'):
             st.write(f'{len(filtered):,} lignes · {len(filtered.columns)} colonnes')
             st.table(filtered.head(5))
@@ -143,8 +146,11 @@ def render_eda(df):
             if corr.notna().sum().sum() == 0:
                 st.info('Corrélations indéfinies : valeurs constantes ou manquantes.')
             else:
-                fig, ax = plt.subplots(figsize=(max(7, len(selected) * .55),
-                                                max(5, len(selected) * .5)))
-                sns.heatmap(corr, vmin=-1, vmax=1, center=0, cmap='RdBu_r', ax=ax)
-                fig.tight_layout(); st.pyplot(fig); plt.close(fig)
+                pairs = corr.rename_axis('Variable').reset_index().melt(
+                    id_vars='Variable', var_name='Comparaison', value_name='Coefficient')
+                heatmap = alt.Chart(pairs).mark_rect().encode(
+                    x=alt.X('Variable:N', sort=selected), y=alt.Y('Comparaison:N', sort=selected),
+                    color=alt.Color('Coefficient:Q', scale=alt.Scale(domain=[-1, 1], scheme='redblue')),
+                    tooltip=['Variable', 'Comparaison', alt.Tooltip('Coefficient:Q', format='.3f')])
+                st.altair_chart(heatmap, width='stretch')
         st.caption('Une corrélation décrit une association, sans démontrer une cause.')
