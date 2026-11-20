@@ -57,7 +57,7 @@ def explore():
             low, high = float(present.min()), float(present.max())
             bounds = st.sidebar.slider(var, low, high, (low, high), key='range_'+var)
             data = data[data[var].between(*bounds)]
-    render_eda(data)
+    render_eda(data, standalone=False)
 
 
 def statistics():
