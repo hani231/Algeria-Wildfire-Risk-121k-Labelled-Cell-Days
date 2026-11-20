@@ -14,18 +14,26 @@ DESCRIPTIONS = {
 
 
 def models():
-    st.title('Comparaison des classifieurs')
     st.caption('Validation 2024 · Seuil de décision 0,5 · F1 de la classe avec détection')
     table = comparison()
     metrics = ['accuracy','precision','recall','f1','roc_auc','average_precision']
-    metric = st.selectbox('Comparer par', metrics, index=3)
-    st.metric(f'Meilleur score sur 2024 · {metric}', f'{table[metric].max():.3f}',
-              help=', '.join(table.index[table[metric].eq(table[metric].max())]))
-    st.write('En tête : ' + ', '.join(table.index[table[metric].eq(table[metric].max())]))
-    st.caption('Le rappel mesure la part de détections retrouvées. La précision mesure la part d’alertes correctes. AP résume la courbe précision-rappel.')
-    st.bar_chart(table[[metric]], horizontal=True, color='#c45a31')
-    st.dataframe(table[metrics].round(3), width='stretch')
-    name = st.selectbox('Fiche modèle', table.index)
+    ranking, profile = st.columns([1.4, 1])
+    with ranking:
+        st.subheader('Classement des modèles')
+        metric = st.selectbox('Comparer par', metrics, index=3)
+        ordered = table.sort_values(metric, ascending=False)
+        st.dataframe(ordered[[metric]], column_config={
+            metric: st.column_config.ProgressColumn(metric, min_value=0, max_value=1, format='%.3f')
+        }, width='stretch')
+    with profile:
+        st.subheader('En tête du classement')
+        leaders = ordered.index[ordered[metric].eq(ordered[metric].max())]
+        st.metric(', '.join(leaders), f'{ordered[metric].max():.3f}')
+        st.caption('Le rappel mesure la part de détections retrouvées. La précision mesure la part d’alertes correctes. AP résume la courbe précision-rappel.')
+    with st.expander('Table complète des métriques'):
+        st.dataframe(table[metrics].round(3), width='stretch')
+    st.divider()
+    name = st.selectbox('Inspecter un modèle', table.index)
     st.write(DESCRIPTIONS[name])
     row = table.loc[name]
     matrix = pd.DataFrame([[row.tn,row.fp],[row.fn,row.tp]], dtype=int,
@@ -47,7 +55,6 @@ def models():
 
 
 def prediction():
-    st.title('Classer une cellule-jour')
     st.write('Choisissez un modèle puis ajustez les mesures d’une observation. Les valeurs initiales proviennent du premier jour du jeu d’entraînement disponible avec tous les prédicteurs.')
     names = [name for name, path in ARTIFACTS.items() if path.is_file()]
     if not names:
@@ -58,7 +65,9 @@ def prediction():
     features = list(model.feature_names_in_)
     data = training()[features]
     example = data.dropna().iloc[0]
-    with st.form('predict'):
+    settings, result = st.columns([1.7, 1])
+    with settings.form('predict'):
+        st.subheader('Mesures de la cellule-jour')
         values = {}
         groups = {'Météo du jour': features[:9], 'Historique météo': features[9:14],
                   'Indices de feu': features[14:20], 'Végétation et saison': features[20:]}
@@ -74,10 +83,19 @@ def prediction():
                                       value=int(example[key]), step=1)
                     values[key] = columns[i % 2].number_input(key, **params)
         submitted = st.form_submit_button('Prédire', type='primary')
-    if submitted:
-        label, score = classify(model, values)
-        st.metric('Classe estimée', '1 · Avec détection' if label else '0 · Sans détection', border=True)
-        st.write(f'Score de probabilité du modèle pour la classe 1 : {score:.1%}.')
+    with result.container(border=True):
+        st.subheader('Lecture du résultat')
+        if not submitted:
+            st.caption(f'{name} · {len(features)} variables')
+            st.info('Ajustez les mesures puis lancez la classification.')
+            return
+        try:
+            label, score = classify(model, values)
+        except ValueError as error:
+            st.error(str(error))
+            return
+        st.metric('Classe estimée', '1 · Avec détection' if label else '0 · Sans détection')
+        st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
         st.caption('Classification rétrospective. La calibration et l’échantillonnage limitent son interprétation comme risque territorial.')
         with st.expander('Mesures utilisées'):
             st.table(pd.Series(values, name='Valeur'))

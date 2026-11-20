@@ -2,7 +2,7 @@
 
 Projet universitaire de fouille de données : étudier les liens entre météo, végétation et détections d'incendie en Algérie.
 
-**État au 14 novembre 2026 : développement partiel.** Trois classifieurs sur six et une démo EDA sont présents. K-NN, Random Forest, SVM, l'application principale, la prédiction interactive et le rapport final restent à intégrer. Voir [l'audit](docs/AUDIT_SIAD03.md).
+**Wildfire Atlas** réunit six espaces Streamlit pour explorer les observations, comparer cinq classifieurs documentés et interroger quatre pipelines compatibles. K-NN, Random Forest et SVM restent à intégrer au benchmark. [Lancement et captures de l’interface](docs/INTERFACE.md)
 
 ## 1. Objectifs et données
 

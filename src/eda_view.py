@@ -1,9 +1,7 @@
 """Vue EDA intégrable : tous les panneaux partagent l'entraînement filtré."""
 
 import altair as alt
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 import streamlit as st
 
 
@@ -25,10 +23,7 @@ def _plot_missing(filtered):
     if nonzero.empty:
         st.info('Aucune valeur manquante dans ce filtre.')
     else:
-        fig, ax = plt.subplots(figsize=(8, max(3, len(nonzero) * .38)))
-        nonzero.sort_values().plot.barh(ax=ax, color='#0d9488')
-        ax.set(xlabel='Valeurs manquantes (%)', ylabel='')
-        fig.tight_layout(); st.pyplot(fig); plt.close(fig)
+        st.bar_chart(nonzero.sort_values(), horizontal=True, color='#22D3EE')
     st.caption('Une valeur manquante n’est pas un zéro. Pour les modèles, '
                'son remplacement est appris dans chaque pli d’entraînement.')
 
@@ -40,25 +35,36 @@ def _plot_distributions(filtered, numeric):
     if sample.empty:
         st.info('Variable entièrement manquante pour ce filtre.')
     else:
-        fig, ax = plt.subplots(figsize=(9, 4))
-        sns.histplot(sample, bins=30, stat='density', kde=sample.nunique() > 1,
-                     ax=ax, color='#0d9488')
-        ax.set(xlabel=variable, ylabel='Densité')
-        fig.tight_layout(); st.pyplot(fig); plt.close(fig)
+        sample_frame = sample.rename('mesure').to_frame()
+        base = alt.Chart(sample_frame)
+        hist = base.mark_bar(color='#7765F5').encode(
+            x=alt.X('mesure:Q', bin=alt.Bin(maxbins=30), title=variable),
+            y=alt.Y('count():Q', title='Effectif'),
+            tooltip=[alt.Tooltip('count():Q', title='Observations')])
+        if sample.nunique() > 1:
+            density = base.transform_density('mesure', as_=['mesure', 'densité']).mark_line(
+                color='#22D3EE').encode(x='mesure:Q', y=alt.Y('densité:Q', title='Densité KDE'))
+            hist = (hist + density).resolve_scale(y='independent')
+        st.altair_chart(hist.properties(height=250), width='stretch')
     st.caption('Histogramme et KDE sur au plus 5 000 valeurs. La KDE décrit la '
                'distribution des mesures, pas une probabilité d’incendie.')
     box_data = filtered[['label', variable]].dropna()
     if not box_data.empty:
-        fig, ax = plt.subplots(figsize=(9, 4))
-        sns.boxplot(data=box_data, x='label', y=variable, ax=ax, color='#99f6e4')
-        ax.set(xlabel='Classe : 0 = sans détection ; 1 = avec détection', ylabel=variable)
-        fig.tight_layout(); st.pyplot(fig); plt.close(fig)
+        quantiles = box_data.groupby('label')[variable].quantile([0, .25, .5, .75, 1]).unstack()
+        quantiles.columns = ['min','q1','médiane','q3','max']
+        base = alt.Chart(quantiles.reset_index()).encode(y=alt.Y('label:N', title='Classe'),
+                                                         tooltip=list(quantiles.columns))
+        chart = (base.mark_rule(color='#95a4c5').encode(x='min:Q', x2='max:Q')
+                 + base.mark_bar(size=22, color='#7765F5').encode(x='q1:Q', x2='q3:Q')
+                 + base.mark_tick(color='white', size=24).encode(x='médiane:Q'))
+        st.altair_chart(chart, width='stretch')
     st.caption('La boîte compare toutes les valeurs présentes du filtre. '
-               'Les points éloignés ne sont pas automatiquement des erreurs.')
+               'La ligne couvre le minimum et le maximum, la boîte les quartiles.')
 
 
-def render_eda(df):
-    st.title('Exploration des détections d’incendie')
+def render_eda(df, standalone=True):
+    if standalone:
+        st.title('Exploration des détections d’incendie')
     st.caption('Cellules-jours de l’entraînement 2012–2023 · Étude rétrospective')
     training = df.loc[df['split'].eq('train')]
     if training.empty:
@@ -125,10 +131,7 @@ def render_eda(df):
         category = st.selectbox('Catégorie', ['label', 'mois'], key='eda_category')
         values = (filtered['label'] if category == 'label' else
                   pd.to_datetime(filtered['date']).dt.month)
-        fig, ax = plt.subplots(figsize=(8, 3))
-        values.value_counts().sort_index().plot.bar(ax=ax, color='#0d9488')
-        ax.set(xlabel=category, ylabel='Observations')
-        fig.tight_layout(); st.pyplot(fig); plt.close(fig)
+        st.bar_chart(values.value_counts().sort_index().rename('Observations'), color='#22D3EE')
     with distributions:
         st.subheader('Histogramme, densité et comparaison par classe')
         _plot_distributions(filtered, numeric)
