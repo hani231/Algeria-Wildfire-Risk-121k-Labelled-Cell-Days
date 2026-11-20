@@ -12,7 +12,10 @@ st.sidebar.title('Atlas des détections')
 st.sidebar.caption('ALGÉRIE · CELLULES-JOURS')
 pages = {'Accueil': overview, 'Exploration': explore, 'Statistiques': statistics,
          'Modèles': models, 'Prédiction': prediction, 'Méthodologie': methodology}
-page = st.sidebar.radio('Navigation', pages.keys(), key='page')
+icons = {'Accueil':'◉', 'Exploration':'▦', 'Statistiques':'∑', 'Modèles':'▥',
+         'Prédiction':'◎', 'Méthodologie':'≡', 'Carte':'⌖'}
+page = st.sidebar.radio('Navigation', list(pages), key='page',
+                        format_func=lambda name: f'{icons[name]}  {name}')
 try:
     pages[page]()
 except (OSError, ValueError, KeyError) as error:
