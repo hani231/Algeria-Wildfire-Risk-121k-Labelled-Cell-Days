@@ -1,4 +1,6 @@
-## Lire les résultats obtenus sur 2024
+## Expérience historique sur la validation 2024
+
+Ce document décrit la grille de sept réglages. L’application utilise le lot run_01 (14 réglages, F1 0,173585). [Résultats du lot affiché](siad03_nb/RESULTATS.md)
 
 | Modèle | Accuracy | Précision classe 1 | Rappel classe 1 | F1 classe 1 | ROC-AUC |
 |---|---:|---:|---:|---:|---:|
