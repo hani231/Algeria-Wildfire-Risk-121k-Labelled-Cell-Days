@@ -102,8 +102,9 @@ def render_eda(df):
     overview, distributions, relations = st.tabs(
         ['Vue d’ensemble', 'Distributions', 'Relations entre variables'])
     with overview:
-        st.download_button("Exporter les observations filtrées", filtered.to_csv(index=False),
-                           file_name="observations_train.csv", mime="text/csv", on_click="ignore")
+        if st.checkbox("Préparer le téléchargement CSV", key="eda_export"):
+            st.download_button("Télécharger la sélection", filtered.to_csv(index=False),
+                               file_name="observations_train.csv", mime="text/csv", on_click="ignore")
         with st.expander('Observations et évolution temporelle'):
             st.write(f'{len(filtered):,} lignes · {len(filtered.columns)} colonnes')
             st.table(filtered.head(5))
