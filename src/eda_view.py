@@ -101,6 +101,13 @@ def render_eda(df):
     overview, distributions, relations = st.tabs(
         ['Vue d’ensemble', 'Distributions', 'Relations entre variables'])
     with overview:
+        with st.expander('Observations et évolution temporelle'):
+            st.write(f'{len(filtered):,} lignes · {len(filtered.columns)} colonnes')
+            st.table(filtered.head(5))
+            st.caption('Types des variables')
+            st.table(filtered.dtypes.astype(str).rename('Type'))
+            annual = filtered.groupby('year').label.agg(['size','sum'])
+            st.line_chart(annual.rename(columns={'size':'Observations','sum':'Avec détection'}))
         st.subheader('Statistiques descriptives')
         st.dataframe(filtered[numeric].describe().T, width='stretch')
         st.caption('count = valeurs présentes · 50 % = médiane · std = dispersion.')

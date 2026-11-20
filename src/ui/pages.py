@@ -1,0 +1,76 @@
+"""Pages de l'observatoire, alimentées par les résultats versionnés."""
+import json
+import pandas as pd
+import streamlit as st
+from src.eda_view import render_eda
+from src.ui.services import ROOT, ARTIFACTS, comparison, training, pipeline, classify
+
+
+def navigate(page):
+    st.session_state['page'] = page
+
+
+def overview():
+    audit = json.loads((ROOT/'results/audit_siad03/qualite.json').read_text())
+    st.title('Les détections d’incendie en Algérie')
+    st.write('Une cellule-jour associe une zone géographique à une date. La cible indique si un incendie y a été détecté ce jour-là.')
+    cols = st.columns(3)
+    for col, label, key in zip(cols, ['Cellules-jours', 'Colonnes brutes', 'Zones'], ['lignes_avant','colonnes_avant','zones']):
+        col.metric(label, f'{audit[key]:,}', border=True)
+    st.caption(f"Période observée du {audit['debut']} au {audit['fin']}.")
+    a, b = st.columns(2)
+    a.subheader('Classes dans l’entraînement')
+    a.bar_chart(pd.Series(audit['effectifs_train']).rename(index={'0':'Sans détection','1':'Avec détection'}), color='#c45a31')
+    b.subheader('Validation 2024')
+    b.metric('Pipelines disponibles pour la saisie', sum(p.is_file() for p in ARTIFACTS.values()))
+    b.dataframe(comparison()[['f1','recall']].round(3), width='stretch')
+    a.button('Explorer les observations', on_click=navigate, args=('Exploration',))
+    b.button('Classer une observation', on_click=navigate, args=('Prédiction',))
+
+
+def reset_filters():
+    for key in list(st.session_state):
+        if key.startswith(('eda_', 'range_')):
+            del st.session_state[key]
+
+
+def explore():
+    data = training()
+    st.sidebar.button('Réinitialiser les filtres', on_click=reset_filters)
+    var = st.sidebar.selectbox('Plage de valeurs', ['Toutes','temp_max','rh_mean','ndvi'], key='range_col')
+    if var != 'Toutes':
+        present = data[var].dropna()
+        if present.nunique() > 1:
+            low, high = float(present.min()), float(present.max())
+            bounds = st.sidebar.slider(var, low, high, (low, high), key='range_'+var)
+            data = data[data[var].between(*bounds)]
+    render_eda(data)
+
+
+def statistics():
+    st.title('Température et humidité les jours de détection')
+    st.write('Dans une même zone et une même année, les jours avec détection sont-ils plus chauds ou plus secs ?')
+    suffix = st.radio('Appariement', ['principal','sensibilite_mois'], horizontal=True,
+                      format_func=lambda s: 'Zone et année' if s=='principal' else 'Zone, année et mois')
+    folder = ROOT/'results/audit_siad03'
+    stats = pd.read_csv(folder/f'statistiques_{suffix}.csv').set_index('variable')
+    gaps = pd.read_csv(folder/f'ecarts_{suffix}.csv').set_index('annee')
+    st.caption('Test exact des signes sur les années. Sous H0, un écart annuel non nul a autant de chances d’être positif que négatif. Correction de Holm pour deux tests.')
+    for col, (var, title, unit) in zip(st.columns(2), [('temp_max','Température maximale','unités du CSV'),('rh_mean','Humidité moyenne','points')]):
+        row = stats.loc[var]
+        col.metric(title, f'{row.ecart_annuel_moyen:+.2f} {unit}', border=True)
+        col.line_chart(gaps[[var]])
+        col.caption(f'p ajustée = {row.p_holm:.6f} · {int(row.annees_non_nulles)} années à écart non nul')
+    st.write('En moyenne, les jours avec détection sont plus chauds et moins humides dans cet échantillon. La dépendance entre saisons limite l’interprétation des tests.')
+
+
+def methodology():
+    st.title('Méthodologie')
+    st.write('Les observations proviennent du jeu Algeria Wildfire Risk publié sur Kaggle. Les négatifs sélectionnés limitent l’interprétation des proportions à cet échantillon.')
+    st.link_button('Source des données', 'https://www.kaggle.com/datasets/abdelmaleknedjar/algeria-wildfire-risk-121k-labelled-cell-days')
+    st.subheader('Du CSV à la classification')
+    st.write('Le nettoyage vérifie les dates et les clés zone/jour, traite les doublons et retire sample_kind, n_detections et max_frp. Les transformations apprises restent dans les pipelines.')
+    st.write('Entraînement 2012–2023, cinq plis temporels, validation 2024. Le test 2025 est réservé. La météo du jour sert à une classification rétrospective.')
+    st.subheader('Contributions')
+    st.write('SIAD03 : audit, statistiques, EDA, Zero-R, GaussianNB et interface. Le plan attribue le prétraitement et le protocole au responsable K-NN/SVM, et l’arbre, la forêt et l’assemblage final au responsable intégration.')
+    st.link_button('Dépôt de l’équipe', 'https://github.com/hani231/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days')
