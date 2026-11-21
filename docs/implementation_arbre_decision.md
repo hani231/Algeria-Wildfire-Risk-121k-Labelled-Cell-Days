@@ -10,7 +10,7 @@ Le notebook Zero-R / Naïve Bayes construit cinq plis temporels croissants :
 entraîner jusqu'en 2018 puis valider en 2019, jusqu'en 2019 puis valider en 2020,
 et ainsi de suite jusqu'à entraîner jusqu'en 2022 puis valider en 2023.
 Le fichier `results/plis_temporels.csv` documente les tailles exactes.
-Ces plis et le F1 de la classe 1 sont une **proposition à confirmer avec Hani**;
+Ces plis et le F1 de la classe 1 sont une **proposition à confirmer avec le responsable du protocole**;
 le script affiche un avertissement tant que le protocole n'est pas marqué confirmé.
 
 ## Entraîner le modèle
