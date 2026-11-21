@@ -23,7 +23,7 @@ Ouvrir l’URL locale affichée dans le terminal. Depuis un environnement Python
 
 Les cartes agrègent les coordonnées observées par cellule. Le rayon représente le nombre de cellules-jours, la couleur la part des observations avec détection. Les contours de contexte proviennent du jeu de données public Natural Earth [Admin 0, 1:110m](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_admin_0_countries.geojson). Ils sont fournis localement et leur résolution limite la précision du littoral.
 
-Conserver le CSV dans Dataset/, le protocole et les lots versionnés dans results/. La comparaison utilise la validation 2024 et les courbes issues des prédictions sauvegardées. L’arbre historique dispose de résultats de validation. Sa version de scikit-learn limite son usage interactif. Les quatre pipelines du studio sont Zero-R, GaussianNB, LogisticRegression et HistGradientBoosting. Les observations de 2025 sont réservées.
+Conserver le CSV brut dans Dataset/, le protocole dans config/ et les lots versionnés dans results/. Le studio charge huit pipelines. Les six obligatoires viennent de benchmark_final, les deux supplémentaires du benchmark historique. L’arbre a été réentraîné avec scikit-learn 1.8.0. Le tableau comparatif porte sur 2024 à seuil 0,50. Le studio applique le seuil final 0,20 au SVM. Le rapport présente l’évaluation sur 2025.
 
 ## Organisation
 
@@ -35,6 +35,6 @@ L’entrée Streamlit est src/app.py. Le module src/ui/shell.py porte la navigat
 
 Les sélections de Data Explorer sont conservées pendant la navigation. « Réinitialiser les filtres » rétablit l’ensemble du train. Le survol d’une case de Spearman indique le nombre de paires complètes. L’histogramme affiche son effectif échantillonné.
 
-Model Arena distingue les six classifieurs demandés et les deux supplémentaires. Pour GaussianNB, le classement et les courbes utilisent run_01 (F1 0,173585). Le benchmark antérieur obtenait 0,176681. L’accuracy de Zero-R atteint 92,37 % en classant toutes les lignes en 0, avec 643 détections manquées.
+Model Arena distingue les six classifieurs demandés et les deux supplémentaires. Pour GaussianNB, le classement et les courbes utilisent le benchmark final qui reproduit run_01 (F1 0,173585). Le benchmark antérieur obtenait 0,176681. L’accuracy de Zero-R atteint 92,37 % en classant toutes les lignes en 0, avec 643 détections manquées.
 
 Dans le studio, les libellés précisent les unités établies ou signalent leur incertitude. Une incompatibilité de version ou de schéma interrompt le chargement. Les contrôles sur les entrées précèdent la classification. Les probabilités concernent la classe de l’observation dans cet échantillon.

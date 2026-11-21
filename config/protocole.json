@@ -1,0 +1,53 @@
+{
+  "statut": "protocole_exécute_sans_validation_pédagogique_documentée",
+  "train": "2012-2023",
+  "validation": "2024",
+  "test_reserve": "2025",
+  "cv_annees_validation": [
+    2019,
+    2020,
+    2021,
+    2022,
+    2023
+  ],
+  "metrique_principale": "f1_classe_1",
+  "features": [
+    "temp_max",
+    "temp_min",
+    "temp_mean",
+    "rh_min",
+    "rh_mean",
+    "wind_max",
+    "wind_mean",
+    "precip_sum",
+    "vpd_max",
+    "precip_7d",
+    "precip_30d",
+    "days_since_rain_1mm",
+    "temp_max_7d_mean",
+    "rh_min_7d_mean",
+    "ffmc",
+    "dmc",
+    "dc",
+    "isi",
+    "bui",
+    "fwi",
+    "ndvi",
+    "ndvi_change_32d",
+    "ndvi_stale_days",
+    "doy"
+  ],
+  "seed": 42,
+  "thresholds": [
+    0.2,
+    0.35,
+    0.5
+  ],
+  "selection": "F1 2024 parmi les six modèles obligatoires et trois seuils; égalité: seuil le plus élevé puis ordre alphabétique.",
+  "refit_after_validation": false,
+  "train_caps": {
+    "K-NN": 12000,
+    "SVM": 3500
+  },
+  "raw_sha256": "cc260f954f76651c745c688c51e962a5fdbc4ee92d487ecd5577ba2aff7ecc26"
+}

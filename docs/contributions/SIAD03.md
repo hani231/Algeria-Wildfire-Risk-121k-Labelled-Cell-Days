@@ -1,5 +1,8 @@
 # SIAD03 — Analyse des détections d’incendie et interface Wildfire Atlas
 
+> Document d’étape antérieur au benchmark final. [Résultats et rapport collectif](../Rapport_MiniProject.pdf).
+
+
 ## Données et contrôle qualité
 
 Une ligne associe une cellule géographique à une journée. Les 121 869 lignes du brut couvrent 1 423 cellules et 37 colonnes. Les négatifs ayant été échantillonnés, la proportion de lignes positives décrit le fichier. Elle ne mesure pas la fréquence territoriale des incendies. Le nettoyage vérifie les clés cellule/date, les dates, les bornes physiques et les doublons exacts. L’audit versionné compte zéro doublon exact supprimé et zéro violation des contrôles physiques répertoriés. Les valeurs manquantes des prédicteurs restent disponibles pour une imputation apprise dans chaque pli. [Audit du CSV](../../results/audit_siad03/qualite.json)

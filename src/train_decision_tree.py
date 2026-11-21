@@ -150,7 +150,7 @@ def main() -> None:
     protocol = load_protocol(args.protocol)
     if protocol["statut"] != "confirme":
         print(
-            "ATTENTION : protocole encore proposé; confirme les plis et la métrique avec Hani "
+            "ATTENTION : protocole encore proposé; confirme les plis et la métrique avec le responsable du protocole "
             "avant de présenter ces scores comme définitifs."
         )
 

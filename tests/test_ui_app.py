@@ -1,5 +1,5 @@
 from streamlit.testing.v1 import AppTest
-from src.ui.services import ROOT, ARTIFACTS, pipeline, training
+from src.ui.services import ROOT, ARTIFACTS, pipeline, training, decision
 
 
 def test_navigation_and_real_prediction():
@@ -11,7 +11,9 @@ def test_navigation_and_real_prediction():
     app.button[0].click().run()
     model = pipeline('GaussianNB')
     sample = training()[list(model.feature_names_in_)].dropna().iloc[:1]
-    expected = str(model.predict(sample)[0])
+    frozen = decision()
+    threshold = frozen['threshold'] if frozen['model'] == 'GaussianNB' else .5
+    expected = str(int(model.predict_proba(sample)[0,1] >= threshold))
     assert app.metric[0].value.startswith(expected)
 
 
@@ -51,7 +53,10 @@ def test_all_deployed_pipelines_in_studio():
             model = pipeline(name)
             example = training()[list(model.feature_names_in_)].dropna().iloc[:1]
             assert not app.exception and not app.error
-            assert app.metric[0].value.startswith(str(model.predict(example)[0]))
+            frozen = decision()
+            threshold = frozen['threshold'] if frozen['model'] == name else .5
+            expected = int(model.predict_proba(example)[0,1] >= threshold)
+            assert app.metric[0].value.startswith(str(expected))
 
 
 def test_scientific_insights_preserves_monthly_pairing():

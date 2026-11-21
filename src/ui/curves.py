@@ -3,12 +3,12 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 from sklearn.metrics import precision_recall_curve, roc_curve
-from src.ui.services import BENCH, NB
+from src.ui.services import BATCHES
 
 
 @st.cache_data
 def curve_points(name):
-    source = NB/'predictions_2024.csv' if name in ('Zero-R','GaussianNB') else BENCH/'predictions_validation.csv'
+    source = BATCHES[name]/'predictions_validation.csv'
     data = pd.read_csv(source, usecols=['year','label',name])
     if not data.year.eq(2024).all():
         raise ValueError('Année de validation inattendue.')

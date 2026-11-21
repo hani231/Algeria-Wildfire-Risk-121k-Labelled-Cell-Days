@@ -1,0 +1,9 @@
+{
+  "model": "SVM",
+  "threshold": 0.2,
+  "f1": 0.17664559315730755,
+  "refit": false,
+  "sha256": "969abdfb4f1d47197279d3e0e22e4dc6cef4e5007bb33499437c7eb32c94aa4b",
+  "config_sha256": "f838ec8816d07d1d257fd2efc7911523df33f7983ec38932b9f9edae0c6ff23f",
+  "raw_sha256": "cc260f954f76651c745c688c51e962a5fdbc4ee92d487ecd5577ba2aff7ecc26"
+}

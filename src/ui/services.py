@@ -3,6 +3,7 @@ import json
 import warnings
 from pickle import UnpicklingError
 from sklearn.exceptions import InconsistentVersionWarning
+from src.models import CONFIG, LOT, MANDATORY
 from src.data_quality import coherence_counts
 import joblib
 import numpy as np
@@ -12,26 +13,27 @@ from src.siad03_extensions.data import ROOT, load_development
 from src.siad03_nb.contract import validate_protocol
 
 BENCH = ROOT / 'results/siad03_extensions/benchmark'
-NB = ROOT / 'results/siad03_nb/run_01'
-ARTIFACTS = {
-    'GaussianNB': NB / 'GaussianNB.joblib',
-    'Zero-R': NB / 'Zero-R.joblib',
-    'LogisticRegression': BENCH / 'LogisticRegression.joblib',
-    'HistGradientBoosting': BENCH / 'HistGradientBoosting.joblib',
-}
+BATCHES = {name: LOT for name in ('GaussianNB', *MANDATORY)}
+BATCHES.update({name: BENCH for name in ('LogisticRegression', 'HistGradientBoosting')})
+ARTIFACTS = {name: folder/(name + '.joblib') for name, folder in BATCHES.items()}
+
+
+def decision():
+    return json.loads((LOT/'decision.json').read_text())
 
 
 @st.cache_data(show_spinner='Chargement des observations d’entraînement…')
 def training():
-    return load_development()[0]
+    return load_development(protocol=CONFIG)[0]
 
 
 @st.cache_data
 def comparison():
-    historical = pd.read_csv(BENCH / 'metrics.csv')
-    personal = pd.read_csv(NB / 'metrics.csv')
-    return pd.concat([personal, historical[~historical.model.isin(personal.model)]],
-                     ignore_index=True).set_index('model')
+    tables = []
+    for folder in dict.fromkeys(BATCHES.values()):
+        table = pd.read_csv(folder/'metrics.csv')
+        tables.append(table.loc[table.model.map(BATCHES).eq(folder)])
+    return pd.concat(tables, ignore_index=True).set_index('model')
 
 
 def pipeline(name):
@@ -47,7 +49,7 @@ def _load_pipeline(path, modified):
             model = joblib.load(path)
     except (InconsistentVersionWarning, EOFError, UnpicklingError, ImportError, AttributeError, KeyError) as error:
         raise ValueError(f'Artefact incompatible ou illisible ({path.name}) : {error}') from error
-    protocol = validate_protocol(json.loads((ROOT / 'results/protocole_propose.json').read_text()))
+    protocol = validate_protocol(json.loads(CONFIG.read_text()))
     if list(getattr(model, 'feature_names_in_', [])) != protocol['features']:
         raise ValueError('Le schéma du modèle diffère du protocole.')
     if set(getattr(model, 'classes_', [])) != {0, 1} or not callable(getattr(model, 'predict', None)):
@@ -55,7 +57,7 @@ def _load_pipeline(path, modified):
     return model
 
 
-def classify(model, values):
+def classify(model, values, threshold=0.5):
     columns = list(model.feature_names_in_)
     if set(values) != set(columns):
         raise ValueError('Entrées incomplètes ou inattendues.')
@@ -73,11 +75,10 @@ def classify(model, values):
             raise ValueError(f'{key} doit être un nombre entier de jours.')
     if not 1 <= frame.at[0, 'doy'] <= 366:
         raise ValueError('Le jour de l’année doit être compris entre 1 et 366.')
-    label = int(model.predict(frame)[0])
     if not hasattr(model, 'predict_proba'):
-        return label, None
+        return int(model.predict(frame)[0]), None
     score = float(model.predict_proba(frame)[0, list(model.classes_).index(1)])
-    return label, score
+    return int(score >= threshold), score
 
 @st.cache_data
 def input_summary(features):
