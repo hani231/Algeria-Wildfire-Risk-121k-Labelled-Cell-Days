@@ -69,7 +69,7 @@ def statistics():
     stats = pd.read_csv(folder/f'statistiques_{suffix}.csv').set_index('variable')
     gaps = pd.read_csv(folder/f'ecarts_{suffix}.csv').set_index('annee')
     st.caption('Test exact des signes sur les années. Sous H0, un écart annuel non nul a autant de chances d’être positif que négatif. H1 bilatérale : les deux signes ont des probabilités différentes. Holm ajuste les deux p-values de chaque analyse pour limiter le risque de rejeter à tort au moins une hypothèse vraie dans cette famille.')
-    for col, (var, title, unit) in zip(st.columns(2), [('temp_max','Température maximale','unités du CSV'),('rh_mean','Humidité moyenne','points')]):
+    for col, (var, title, unit) in zip(st.columns(2), [('temp_max','Température maximale','°C'),('rh_mean','Humidité moyenne','points')]):
         row = stats.loc[var]
         col.metric(title, f'{row.ecart_annuel_moyen:+.2f} {unit}', border=True)
         col.line_chart(gaps[[var]])
@@ -83,15 +83,15 @@ def methodology():
     st.link_button('Source des données', 'https://www.kaggle.com/datasets/abdelmaleknedjar/algeria-wildfire-risk-121k-labelled-cell-days')
     st.subheader('Du CSV à la classification')
     st.write('Le nettoyage vérifie les dates et les clés zone/jour, traite les doublons et retire sample_kind, n_detections et max_frp. Les transformations apprises restent dans les pipelines.')
-    st.write('Entraînement 2012–2023, cinq plis temporels, validation 2024. Le test 2025 est réservé. La météo du jour sert à une classification rétrospective.')
+    st.write('Entraînement 2012–2023, cinq plis temporels, validation 2024. Le test 2025 est évalué après gel du modèle et du seuil. La météo du jour sert à une classification rétrospective.')
     audit = json.loads((ROOT/'results/audit_siad03/qualite.json').read_text())
-    for column, (split, period) in zip(st.columns(3), [('train','Train · 2012–2023'), ('val','Validation · 2024'), ('test','Réservé · 2025')]):
+    for column, (split, period) in zip(st.columns(3), [('train','Train · 2012–2023'), ('val','Validation · 2024'), ('test','Test final · 2025')]):
         column.metric(period, f"{audit['lignes_par_partition'][split]:,}")
     st.subheader('Contrôles de cohérence du CSV')
     st.dataframe(pd.Series(audit['controles_coherence'], name='Anomalies'), width='stretch')
-    config = json.loads((ROOT/'results/protocole_propose.json').read_text())
+    config = json.loads((ROOT/'config/protocole.json').read_text())
     with st.expander('Variables utilisées par les pipelines'):
         st.write(', '.join(config['features']))
     st.subheader('Contributions')
-    st.write('SIAD03 : audit, statistiques, EDA, Zero-R, GaussianNB et interface. Le plan attribue le prétraitement et le protocole au responsable K-NN/SVM, et l’arbre, la forêt et l’assemblage final au responsable intégration.')
+    st.write('SIAD03 a intégré le benchmark final et le rapport sur la base des contributions antérieures de l’équipe. L’historique et le README détaillent les lots.')
     st.link_button('Dépôt de l’équipe', 'https://github.com/hani231/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days')

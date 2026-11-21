@@ -75,8 +75,7 @@ def test_geo_counts_and_coordinate_integrity():
 
 def test_confusion_matrices_come_from_assigned_batches():
     for name, row in services.comparison().iterrows():
-        source = (services.NB/'predictions_2024.csv' if name in ('Zero-R', 'GaussianNB')
-                  else services.BENCH/'predictions_validation.csv')
+        source = services.BATCHES[name]/'predictions_validation.csv'
         predictions = pd.read_csv(source)
         assert predictions.year.eq(2024).all()
         actual = confusion_matrix(predictions.label, predictions[name].ge(.5)).ravel()

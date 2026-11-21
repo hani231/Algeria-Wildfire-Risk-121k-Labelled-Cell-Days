@@ -2,10 +2,13 @@
 import pandas as pd
 import streamlit as st
 from src.ui.curves import curves
-from src.ui.services import BENCH, NB, ROOT, ARTIFACTS, comparison, input_summary, pipeline, classify
+from src.ui.services import BENCH, BATCHES, decision, ROOT, ARTIFACTS, comparison, input_summary, pipeline, classify
 from src.ui.units import measure_label
 
 DESCRIPTIONS = {
+    'K-NN': 'Vote des voisins après imputation et standardisation.',
+    'Random Forest': 'Agrège des arbres appris sur des tirages bootstrap.',
+    'SVM': 'Sépare les classes par une marge avec noyau. Le score est calibré sur les données d’apprentissage.',
     'Zero-R': 'Prédit la classe majoritaire du train.',
     'GaussianNB': 'Combine les distributions gaussiennes des variables dans chaque classe.',
     'DecisionTree': 'Sépare les observations par une suite de seuils.',
@@ -17,7 +20,7 @@ DESCRIPTIONS = {
 def models():
     st.caption('Validation 2024 · Seuil de décision 0,5 · F1 de la classe avec détection')
     table = comparison()
-    metrics = ['accuracy','precision','recall','f1','roc_auc','average_precision']
+    metrics = ['accuracy','precision','recall','f1','balanced_accuracy','roc_auc','average_precision']
     ranking, profile = st.columns([1.4, 1])
     with ranking:
         st.subheader('Classement des modèles')
@@ -38,11 +41,9 @@ def models():
             status = 'En attente'
             source = '—'
             if candidate in table.index:
-                batch = NB if candidate in ('GaussianNB', 'Zero-R') else BENCH
+                batch = BATCHES[candidate]
                 source = str((batch/'metrics.csv').relative_to(ROOT))
-                if candidate == 'DecisionTree':
-                    status = 'Scores disponibles · pipeline incompatible (1.9.1)'
-                elif candidate in ARTIFACTS and ARTIFACTS[candidate].is_file():
+                if candidate in ARTIFACTS and ARTIFACTS[candidate].is_file():
                     status = 'Résultats et artefact disponibles'
                 else:
                     status = 'Scores disponibles · pipeline absent'
@@ -57,7 +58,7 @@ def models():
     st.write(DESCRIPTIONS[name])
     if name == 'GaussianNB':
         legacy = pd.read_csv(BENCH/'metrics.csv').set_index('model').loc[name]
-        st.caption(f"run_01 · F1 = {table.loc[name, 'f1']:.6f} (14 réglages). "
+        st.caption(f"Benchmark commun · F1 = {table.loc[name, 'f1']:.6f} (14 réglages). "
                    f"Expérience historique · F1 = {legacy.f1:.6f} (7 réglages). "
                    "Le classement utilise le lot reproductible sélectionné sur les plis d’entraînement.")
     row = table.loc[name]
@@ -71,18 +72,16 @@ def models():
         st.write('La classe majoritaire est 0. Prédire toujours 0 donne une accuracy élevée '
                  'sur cet échantillon déséquilibré et un rappel nul pour les détections.')
     curves(name)
-    if name == 'DecisionTree':
-        st.info('Arbre historique enregistré avec scikit-learn 1.9.1. Réentraînement requis pour la saisie interactive en 1.8.0.')
-        search = pd.read_csv(ARTIFACTS['GaussianNB'].parents[2]/'recherche_arbre_decision.csv')
-        st.write('Réglage retenu', search.loc[search.mean_test_f1.idxmax(), 'params'])
-    elif ARTIFACTS[name].is_file():
+    if ARTIFACTS[name].is_file():
         model = pipeline(name)
         estimator = model.steps[-1][1] if hasattr(model,'steps') else model
         with st.expander('Hyperparamètres utilisés'):
             st.json(estimator.get_params(deep=False), expanded=False)
         if hasattr(estimator, 'coef_'):
             st.bar_chart(pd.Series(estimator.coef_[0], index=model.feature_names_in_).rename('Coefficient standardisé'), horizontal=True)
-    st.caption('Random Forest, K-NN et SVM : résultats indisponibles.')
+    final = decision()
+    st.caption(f"Décision gelée sur 2024 : {final['model']}, seuil {final['threshold']:.2f}. "
+               "Les matrices comparatives affichées ci-dessus utilisent toutes le seuil 0,50.")
 
 
 def prediction():
@@ -120,7 +119,10 @@ def prediction():
             st.info('Ajustez les mesures puis lancez la classification.')
             return
         try:
-            label, score = classify(model, values)
+            final = decision()
+            threshold = final['threshold'] if final['model'] == name else .5
+            label, score = classify(model, values, threshold)
+            st.caption(f'Seuil de classification : {threshold:.2f}')
         except ValueError as error:
             st.error(str(error))
             return
