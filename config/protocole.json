@@ -48,5 +48,6 @@
   "train_caps": {
     "K-NN": 12000,
     "SVM": 3500
-  }
+  },
+  "raw_sha256": "cc260f954f76651c745c688c51e962a5fdbc4ee92d487ecd5577ba2aff7ecc26"
 }
