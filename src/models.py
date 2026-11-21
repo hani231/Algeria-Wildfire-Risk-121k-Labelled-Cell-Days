@@ -1,7 +1,6 @@
 """Modèles obligatoires et recherche chronologique du benchmark collectif."""
 import argparse
 import hashlib
-import json
 import platform
 from pathlib import Path
 from time import perf_counter
@@ -26,10 +25,9 @@ from threadpoolctl import threadpool_limits
 
 from src.siad03_extensions.data import ROOT, new_output, write_json
 from src.siad03_extensions.evaluation import metrics
-from src.siad03_nb.contract import load_inputs
+from src.preprocessing import CONFIG, development_inputs, read_protocol
 from src.siad03_nb.experiment import SMOOTHING
 
-CONFIG = ROOT/'config/protocole.json'
 LOT = ROOT/'results/benchmark_final'
 MANDATORY = ('Zero-R', 'GaussianNB', 'DecisionTree', 'Random Forest', 'K-NN', 'SVM')
 
@@ -79,11 +77,9 @@ def digest(path):
 
 
 def run(output):
-    cfg = json.loads(CONFIG.read_text())
-    train, val, features, folds, provenance = load_inputs(protocol=CONFIG)
+    cfg = read_protocol()
+    train, val, features, folds, provenance = development_inputs()
     raw_hash = provenance['raw_sha256']
-    if raw_hash != cfg['raw_sha256']:
-        raise ValueError('Empreinte du dataset incompatible avec ce protocole.')
     out = new_output(output)
     scores = val[['date','cell_id','year','label']].copy()
     rows, manifest = [], {}

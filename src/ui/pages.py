@@ -22,7 +22,7 @@ def overview():
         st.subheader('Couverture du CSV')
         st.metric('Cellules-jours', f"{audit['lignes_avant']:,}")
         st.metric('Zones échantillonnées', f"{audit['zones']:,}")
-        st.caption(f"Du {audit['debut']} au {audit['fin']}. Carte limitée à l’entraînement.")
+        st.caption(f"Du {audit['debut']} au {audit['fin']}. Carte du train. Le rectangle couvre aussi des cellules hors des frontières algériennes.")
     annual = pd.read_csv(ROOT/'results/siad03_extensions/exploration/annual.csv').set_index('year')
     annual['Sans détection'] = annual.n - annual.detections
     trend, actions = st.columns([2.2, 1])

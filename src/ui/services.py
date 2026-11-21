@@ -24,7 +24,7 @@ def decision():
 
 @st.cache_data(show_spinner='Chargement des observations d’entraînement…')
 def training():
-    return load_development()[0]
+    return load_development(protocol=CONFIG)[0]
 
 
 @st.cache_data

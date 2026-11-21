@@ -2,13 +2,13 @@
 import argparse
 from pathlib import Path
 import pandas as pd
-from src.models import CONFIG, candidates
-from src.siad03_nb.contract import load_inputs
+from src.models import candidates
+from src.preprocessing import development_inputs
 from src.siad03_extensions.evaluation import metrics
 
 
 def compare(path):
-    train, _, features, folds, _ = load_inputs(protocol=CONFIG)
+    train, _, features, folds, _ = development_inputs()
     groups = {'météo du jour': features[:9], 'météo et historique': features[:14],
               'ensemble des prédicteurs': features}
     rows = []
