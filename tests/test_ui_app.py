@@ -66,3 +66,10 @@ def test_scientific_insights_preserves_monthly_pairing():
     next(item for item in app.radio if item.label == 'Appariement').set_value('sensibilite_mois').run()
     assert not app.exception and not app.error
     assert any('p ajustée' in item.value for item in app.caption)
+
+
+def test_svm_threshold_visible_before_submission():
+    app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=60).run()
+    app.radio(key='page').set_value('Prédiction').run()
+    app.selectbox[0].set_value('SVM').run()
+    assert any('0.20' in item.value and '0,50' in item.value for item in app.caption)
