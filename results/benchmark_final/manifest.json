@@ -1,0 +1,146 @@
+{
+  "models": {
+    "Zero-R": {
+      "params": {},
+      "n_fit": 104979,
+      "sha256": "145ca709472aa28e59475f9833a568b561918de134000f0b05d5fefd0455f66b",
+      "fold_fit": [
+        61948,
+        70671,
+        79395,
+        87997,
+        96599
+      ],
+      "fold_check": [
+        8723,
+        8724,
+        8602,
+        8602,
+        8380
+      ]
+    },
+    "GaussianNB": {
+      "params": {
+        "gaussiannb__var_smoothing": 1.0
+      },
+      "n_fit": 104979,
+      "sha256": "348cc76ea743197e2d4eb04bef47c1e5b28e12e558651eceb709311d2e01267a",
+      "fold_fit": [
+        61948,
+        70671,
+        79395,
+        87997,
+        96599
+      ],
+      "fold_check": [
+        8723,
+        8724,
+        8602,
+        8602,
+        8380
+      ]
+    },
+    "DecisionTree": {
+      "params": {
+        "decisiontreeclassifier__ccp_alpha": 0.0002,
+        "decisiontreeclassifier__class_weight": "balanced",
+        "decisiontreeclassifier__criterion": "gini",
+        "decisiontreeclassifier__max_depth": 10,
+        "decisiontreeclassifier__min_samples_leaf": 80
+      },
+      "n_fit": 104979,
+      "sha256": "ae9535e08527bde59d3ee50f05224f3b0f76b5e0ca1efe16d6ec52c704c5fa88",
+      "fold_fit": [
+        61948,
+        70671,
+        79395,
+        87997,
+        96599
+      ],
+      "fold_check": [
+        8723,
+        8724,
+        8602,
+        8602,
+        8380
+      ]
+    },
+    "Random Forest": {
+      "params": {
+        "randomforestclassifier__class_weight": "balanced",
+        "randomforestclassifier__max_depth": 10,
+        "randomforestclassifier__max_features": 0.4,
+        "randomforestclassifier__min_samples_leaf": 50,
+        "randomforestclassifier__n_estimators": 32
+      },
+      "n_fit": 104979,
+      "sha256": "7c39a5ea057d1bbffc0019dc5ac6db98cb8be64a2736e165fae3aa291221c86a",
+      "fold_fit": [
+        61948,
+        70671,
+        79395,
+        87997,
+        96599
+      ],
+      "fold_check": [
+        8723,
+        8724,
+        8602,
+        8602,
+        8380
+      ]
+    },
+    "K-NN": {
+      "params": {
+        "kneighborsclassifier__n_neighbors": 15,
+        "kneighborsclassifier__p": 2,
+        "kneighborsclassifier__weights": "uniform"
+      },
+      "n_fit": 12000,
+      "sha256": "e05f54389b796d84f59a5b87575f5dc4ce39c42ea93c9227202183064889b806",
+      "fold_fit": [
+        12000,
+        12000,
+        12000,
+        12000,
+        12000
+      ],
+      "fold_check": [
+        8723,
+        8724,
+        8602,
+        8602,
+        8380
+      ]
+    },
+    "SVM": {
+      "params": {
+        "svc__C": 0.1,
+        "svc__kernel": "linear"
+      },
+      "n_fit": 3500,
+      "sha256": "969abdfb4f1d47197279d3e0e22e4dc6cef4e5007bb33499437c7eb32c94aa4b",
+      "fold_fit": [
+        3500,
+        3500,
+        3500,
+        3500,
+        3500
+      ],
+      "fold_check": [
+        8723,
+        8724,
+        8602,
+        8602,
+        8380
+      ]
+    }
+  },
+  "raw_sha256": "cc260f954f76651c745c688c51e962a5fdbc4ee92d487ecd5577ba2aff7ecc26",
+  "config_sha256": "f838ec8816d07d1d257fd2efc7911523df33f7983ec38932b9f9edae0c6ff23f",
+  "python": "3.12.14",
+  "sklearn": "1.8.0",
+  "numpy": "2.3.5",
+  "pandas": "2.2.3",
+  "joblib": "1.5.3"
+}
