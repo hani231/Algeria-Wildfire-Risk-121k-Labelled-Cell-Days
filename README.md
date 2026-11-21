@@ -1,114 +1,87 @@
-# Algeria Wildfire Risk — classification de cellules-jours
+# Wildfire Atlas — classification des détections d’incendie
 
-Projet universitaire de fouille de données : étudier les liens entre météo, végétation et détections d'incendie en Algérie.
+Wildfire Atlas compare six classifieurs supervisés sur des cellules-jours et permet d’explorer leurs résultats dans Streamlit. Le SVM sélectionné retrouve 900 des 1 122 détections du test 2025. Il produit également 4 814 faux positifs. Les mesures de la journée et le choix des négatifs limitent l’interprétation à la classification rétrospective dans cet échantillon.
 
-**Wildfire Atlas** réunit six espaces Streamlit pour explorer les observations, comparer cinq classifieurs documentés et interroger quatre pipelines compatibles. K-NN, Random Forest et SVM restent à intégrer au benchmark. [Lancement et captures de l’interface](docs/INTERFACE.md)
+[Rapport collectif PDF](docs/Rapport_MiniProject.pdf) · [Source éditable](docs/Rapport_MiniProject.md) · [Guide de l’interface](docs/INTERFACE.md) · [Conformité au cahier des charges](docs/MATRICE_CONFORMITE.csv)
 
-## 1. Objectifs et données
+## Lancement local
 
-Une ligne correspond à une zone (`cell_id`) et une date. `label=1` indique une détection ; `label=0` son absence dans le fichier, sans prouver l'absence de feu réel. Les négatifs sont sélectionnés : les proportions ne mesurent pas le risque territorial. La météo du jour sert à une **classification rétrospective**, pas à une prévision opérationnelle.
-
-Source annoncée : [Kaggle](https://www.kaggle.com/datasets/abdelmaleknedjar/algeria-wildfire-risk-121k-labelled-cell-days). Le brut `Dataset/dataset.csv`, environ 45,5 Mo, est récupéré par le clone. La version producteur, la licence, certaines unités et la construction historique des variables restent à documenter.
-
-| Propriété vérifiée | Valeur |
-|---|---:|
-| Lignes / colonnes brutes | 121 869 / 37 |
-| Zones | 1 423 |
-| Colonnes après retrait des trois fuites | 34 |
-| Train 2012–2023 | 104 979 lignes |
-| Validation 2024 | 8 423 lignes |
-| Test réservé 2025 | 8 467 lignes |
-
-Les 24 entrées proposées figurent dans `results/protocole_propose.json`. `sample_kind`, `n_detections`, `max_frp`, `label` et `split` sont interdits comme prédicteurs. `days_since_last_fire`, `ndvi_normal` et `ndvi_anomaly` sont provisoirement exclus, en attendant la vérification de leur construction. Les NaN sont imputés dans chaque pli, au sein des pipelines. Lire le [dictionnaire](docs/dictionnaire_colonnes.md).
-
-## 2. Installation et exécution locale
-
-Environnement du lot SIAD03 : **Python 3.12.14**, scikit-learn **1.8.0**. L'ancien artefact de l'arbre utilise **1.9.1** : le réentraîner dans l'environnement commun avant intégration. Un chargement sans crash ne garantit pas la compatibilité.
-
-Sous PowerShell :
+Depuis le clone contenant la branche du benchmark final, utiliser Python 3.12. Sous PowerShell :
 
 ```powershell
-git clone https://github.com/hani231/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days.git
-cd Algeria-Wildfire-Risk-121k-Labelled-Cell-Days
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m src.audit_data
-.\.venv\Scripts\python.exe -m src.verify_existing
-.\.venv\Scripts\python.exe -m src.statistical_analysis
 .\.venv\Scripts\python.exe -m streamlit run src/app.py
 ```
 
-Sous Linux/macOS : créer l'environnement avec `python3.12 -m venv .venv`, puis employer `.venv/bin/python` à la place de `.\.venv\Scripts\python.exe`.
+Sous Linux/macOS :
 
-L'audit écrit dans `results/audit_siad03/` et conserve le brut. La démo propose statistiques, manquants, histogramme/KDE, boxplot, fréquences, corrélation et filtres années/classes/mois/zones. Elle utilise uniquement le train. L'histogramme utilise au plus 5 000 valeurs ; les tableaux et boxplots utilisent tout le filtre. Une sélection vide affiche un message.
-
-### Notebooks et entraînement
-
-Dans VS Code, installer les extensions Python/Jupyter et choisir le noyau `.venv`. Exécuter toutes les cellules de `notebooks/01_eda_and_cleaning.ipynb`, puis de `notebooks/03_zeror_naive_bayes.ipynb`. Le second entraîne Zero-R et GaussianNB. Les notebooks réécrivent des fichiers suivis : convenir d'un intégrateur avant une relance sur une branche commune.
-
-L’archive fournie rapporte une exécution historique de 21 cellules Python dans une copie isolée. Les notebooks n’ont pas été réexécutés pendant cette intégration ; leur lancement dans Jupyter reste à vérifier.
-
-L'arbre dispose de la commande existante suivante, après harmonisation des versions et du protocole :
-
-```powershell
-.\.venv\Scripts\python.exe -m src.train_decision_tree
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+python -m streamlit run src/app.py
 ```
 
-Le notebook historique recherche 7 valeurs de `var_smoothing`, l'arbre 48 combinaisons. Les cinq plis valident 2019 à 2023, en apprenant sur les années précédentes. Le F1 de classe 1 est la métrique de sélection proposée. Cette validation chronologique diffère d'un K-Fold classique : acceptation pédagogique à confirmer. **2025 reste réservé** jusqu'au gel des choix.
+Ouvrir l’adresse locale indiquée par Streamlit. Les huit pipelines du studio sont fournis. L’application charge les artefacts existants, contrôle le schéma et les unités puis classe les mesures soumises. Le catalogue, les prédictions, les matrices et les courbes utilisent un registre commun. Le fond cartographique est local.
 
-| Chemin | Rôle |
+## Données et protocole
+
+Le seul brut attendu est `Dataset/dataset.csv`. Il compte **121 869 lignes, 37 colonnes et 1 423 cellules**. Les exports `Dataset/processed.csv` et `data/processed/dataset_clean.csv` appartiennent aux étapes historiques. Le benchmark repart du brut. Les six fonctions EDA sont disponibles sur le train, avec filtrage conjoint et export. La population rectangulaire inclut des cellules hors d’Algérie. Données d’Abdelmalek Nedjar, météo Open-Meteo/ERA5-Land, NASA FIRMS et MODIS, sous CC BY 4.0. [Sources, attributions et contrôles](docs/SOURCES.md) · [Dictionnaire](docs/dictionnaire_colonnes.md)
+
+| Partition | Années | Effectif | Usage |
+|---|---|---:|---|
+| Entraînement | 2012–2023 | 104 979 | Cinq validations annuelles internes 2019–2023, apprentissage sur les années antérieures |
+| Validation | 2024 | 8 423 | Comparaison des modèles et choix du seuil |
+| Test | 2025 | 8 467 | Une règle finale gelée avant évaluation |
+
+La configuration active est `config/protocole.json`. Les dates, coordonnées, identifiants, label, split, sample_kind, n_detections et max_frp restent hors des prédicteurs. Les historiques days_since_last_fire, ndvi_normal et ndvi_anomaly sont aussi exclus. Les transformations sont apprises dans chaque pli. La graine vaut 42. Les trois seuils de candidature sont 0,20, 0,35 et 0,50. Le modèle et le seuil maximisant le F1 de validation parmi les six obligatoires sont gelés sans réajustement. La validation chronologique diffère du K-Fold classique demandé. Son acceptation par le professeur reste à confirmer.
+
+## Résultats
+
+| Modèle obligatoire | F1 CV moyen | F1 2024 à 0,50 | ROC-AUC 2024 | AP 2024 |
+|---|---:|---:|---:|---:|
+| Zero-R | 0,000 | 0,000 | 0,500 | 0,076 |
+| GaussianNB | 0,410 | 0,174 | 0,631 | 0,122 |
+| Arbre | 0,425 | 0,160 | 0,608 | 0,100 |
+| Random Forest | 0,430 | 0,167 | 0,615 | 0,104 |
+| K-NN | 0,386 | 0,126 | 0,601 | 0,098 |
+| SVM | 0,412 | 0,123 | 0,630 | 0,120 |
+
+K-NN utilise 12 000 lignes d’apprentissage par ajustement et SVM 3 500. Les validations utilisent toutes les lignes de chaque année. Le nouvel arbre est compatible avec scikit-learn 1.8.0. Le lot final reproduit le GaussianNB à 14 réglages (F1 0,173585). L’ancien notebook à 7 réglages obtenait 0,176681. Les deux modèles supplémentaires LogisticRegression et HistGradientBoosting restent consultables avec leurs résultats d’origine. [Comparatif complet et temps](results/benchmark_final/metrics.csv) · [Paramètres et empreintes](results/benchmark_final/manifest.json)
+
+Le SVM linéaire au seuil de **0,20** obtient un F1 2024 de **0,176646**. Le commit de gel est `ece0598`. Sur 2025 il obtient **0,158 de précision**, **0,802 de rappel**, **0,263 de F1**, **0,610 de ROC-AUC** et **0,178 d’Average Precision**. L’AP utilise la somme des précisions pondérée par les increments de rappel. Aucune variante n’a été choisie à partir du score final. Les négatifs échantillonnés, la météo contemporaine et la réutilisation de 2024 durant le développement limitent la généralisation. [Décision](results/benchmark_final/decision.json) · [Évaluation finale](results/test_final/result.json)
+
+À cellule et année comparables, l’écart moyen des jours positifs est de +3,077 °C et −10,107 points d’humidité. Les tests des signes sur les années donnent p ajustée par Holm de 0,00097656. Les associations persistent avec appariement mensuel. [Analyses et limites](docs/Rapport_MiniProject.pdf)
+
+## Reproduction
+
+Après activation du venv, depuis la racine, employer des dossiers de sortie neufs pour les expériences. Les audits reproduisent les tableaux sous results/audit_siad03.
+
+```bash
+python -m src.audit_data
+python -m src.statistical_analysis
+python -m src.models --output results/local_runs/benchmark
+python -m src.feature_comparison --output results/local_runs/benchmark/ablation_train.csv
+python -m src.final_evaluation --output results/local_runs/test_gele
+python -m src.build_report
+```
+
+L’avant-dernière commande reproduit uniquement l’évaluation du **modèle publié et gelé**. Elle vérifie la décision inscrite dans Git et les empreintes des données, de la configuration et de l’artefact. La génération du PDF utilise Pandoc et XeLaTeX installés sur le système. Le gabarit Markdown accepte des tableaux injectés depuis les CSV et la figure ROC/PR est régénérée à partir des scores. Les versions du lot et les temps sont inclus dans le manifeste et les CSV. L’installation locale de l’app se limite aux dépendances Python.
+
+## Organisation et contributions
+
+| Emplacement ou contribution | Contenu |
 |---|---|
-| `Dataset/dataset.csv` | Brut versionné |
-| `Dataset/processed.csv` | Ancien export intermédiaire ; ne pas utiliser comme brut |
-| `data/processed/dataset_clean.csv` | Données nettoyées non imputées |
-| `notebooks/` | EDA/nettoyage, Zero-R/NB |
-| `src/cleaning_guide.py`, `src/data_quality.py` | Nettoyage et contrôles |
-| `src/audit_data.py`, `src/statistical_analysis.py` | Audits et analyses reproductibles |
-| `src/app.py`, `src/ui/` | Navigation, cartes, présentation scientifique et intégration des modèles |
-| `src/eda_view.py`, `src/run_eda_demo.py` | Vue intégrable et démo |
-| `src/train_decision_tree.py` | Recherche et entraînement arbre |
-| `models/`, `results/`, `figures/` | Artefacts, métriques, figures |
-| `tests/` | Nettoyage, statistiques, interactions EDA |
-| `docs/` | Dictionnaire, audit, guides ; rapport final absent |
+| src/preprocessing.py, src/models.py | Contrat commun, plis et recherches |
+| src/app.py, src/ui/, src/eda_view.py | Six espaces Streamlit et services |
+| notebooks/, src/siad03_nb/, src/siad03_extensions/ | Lots de développement historiques et analyses complémentaires |
+| results/benchmark_final/, results/test_final/ | Lots actifs des six modèles et décision gelée |
+| models/, results/protocole_propose.json | Pipelines et paramètres historiques conservés pour traçabilité |
+| SIAD03 | Audit, EDA, statistiques, Zero-R/NB, interface, puis intégration du benchmark des six modèles, tests et rapport avec assistance de développement |
+| Responsable du prétraitement (code à confirmer) | Cadrage du dépôt et travaux initiaux de préparation selon l’historique et le plan |
+| Responsable de l’intégration (code à confirmer) | Arbre historique et résultats associés. L’arbre du benchmark commun a été réentraîné dans le lot SIAD03 |
 
-`src/preprocessing.py`, `src/models.py`, les notebooks communs et `docs/Rapport_MiniProject.pdf` restent à intégrer.
-
-## 3. Rôles et contributions
-
-| Code | Responsabilités | Preuves présentes |
-|---|---|---|
-| SIAD03, confirmé | Données, nettoyage, EDA, statistiques, Zero-R/NB, interface Wildfire Atlas | Notebooks 01/03, scripts, résultats ; six espaces Streamlit et tests |
-| IASD12, code historique à confirmer | Protocole, prétraitement, K-NN/SVM, consolidation | Initialisation et ancien notebook dans l'historique ; modèles absents au HEAD |
-| IASD17, code historique à confirmer | Arbre/RF, application, assemblage | Script et résultats de l'arbre ; RF en attente |
-
-Chaque auteur doit comprendre, tester et commiter son travail. Aucun historique n'est antidaté ou réattribué. Des supports anciens contiennent encore des identités : les anonymiser avant le rendu public, en conservant les originaux internes.
-
-## 4. Résultats vérifiés et limites
-
-Scores recalculés à partir des artefacts sur la **validation 2024**, pas sur le test final.
-
-| Modèle | Accuracy | Précision 1 | Rappel 1 | F1 1 | ROC-AUC |
-|---|---:|---:|---:|---:|---:|
-| Zero-R | 0,9237 | 0,0000 | 0,0000 | 0,0000 | 0,5000 |
-| GaussianNB (run_01) | 0,5060 | 0,0995 | 0,6796 | 0,1736 | 0,6314 |
-| LogisticRegression (supplémentaire) | 0,6006 | 0,1094 | 0,5925 | 0,1847 | 0,6355 |
-| HistGradientBoosting (supplémentaire) | 0,6418 | 0,1017 | 0,4712 | 0,1673 | 0,6207 |
-| DecisionTree | 0,5572 | 0,0958 | 0,5692 | 0,1641 | 0,6092 |
-| K-NN | — | — | — | — | — |
-| Random Forest | — | — | — | — | — |
-| SVM | — | — | — | — | — |
-
-Zero-R prédit toujours 0 et rate les 643 positifs ; précision à 0 par convention. Le GaussianNB présenté dans l’application retrouve 437 détections avec 3 955 faux positifs. Son F1 est 0,17358490566037735 pour le lot run_01 (14 réglages, var_smoothing = 1). Le benchmark historique utilise 7 réglages et obtient 0,17668110755321154. Le lot courant a été choisi pour sa traçabilité, avec sélection sur les cinq plis du train. L'arbre en retrouve 366 avec 3 453 faux positifs. Ces performances sont conservées et discutées.
-
-Les deux analyses principales utilisent les écarts annuels après appariement zone/année. Effets moyens : **+3,0769 unités CSV** de température et **−10,1067 points d'humidité**. Le complément zone/année/mois donne **+2,3071** et **−9,5909**. Chaque p-value principale ajustée par Holm vaut **0,0009765625**. L'indépendance des signes annuels n'est pas démontrée : résultats exploratoires, sans causalité ni risque absolu. L'audit détaille H0/H1 et les limites.
-
-Les probabilités ne sont pas certifiées calibrées. Des variables disponibles après la journée empêchent de présenter le projet comme une alerte anticipée.
-
-Références : [validation scikit-learn](https://scikit-learn.org/stable/modules/cross_validation.html), [test binomial SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.binomtest.html), [tests Streamlit](https://docs.streamlit.io/develop/api-reference/app-testing/st.testing.v1.apptest), [cahier des charges](https://hosniadilemp-a11y.github.io/DataMiningProjectPage/).
-
-## Vérification de cette intégration
-
-Depuis la racine, lancer `python -m pytest -q`. Les tests d’interface exercent les six espaces, les quatre pipelines compatibles, les filtres et les résultats versionnés. Les tests de qualité comparent les matrices sur 2024 et vérifient les saisies invalides. Les documents des premiers lots décrivent leur état à la date de rédaction.
-
-[Contribution scientifique SIAD03](docs/contributions/SIAD03.md) · [Matrice de conformité](docs/MATRICE_CONFORMITE.csv)
+Le plan de démarrage est conservé dans une version publique anonymisée. Les contributions se vérifient par commit. Les documents des premiers lots décrivent leur état à la date de rédaction. [Plan initial](docs/Plan_initial_equipe.pdf)

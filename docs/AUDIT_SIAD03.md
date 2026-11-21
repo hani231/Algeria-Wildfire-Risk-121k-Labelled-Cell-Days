@@ -1,5 +1,8 @@
 # Audit et plan de rattrapage — 14 novembre 2026
 
+> Document d’étape antérieur au benchmark final. [Résultats et rapport collectif](../docs/Rapport_MiniProject.pdf).
+
+
 > Archive du premier lot. Les résultats et les indications Git ci-dessous décrivent le HEAD audité à cette date.
 
 ## Actualisation après la fusion de la PR #7

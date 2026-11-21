@@ -1,13 +1,13 @@
-critere,points_max,intitule,etat,preuve,travail_restant
-1.1,2,Données et prétraitement,Partiellement conforme,src/data_quality.py et tests/test_cleaning.py,Documenter unités et prétraitement commun
-1.2,3,EDA et deux analyses,Testé,tests/test_statistics.py et results/audit_siad03/statistiques_principal.csv,Intégrer justification et sensibilité au rapport collectif
-1.3,1,Six classifieurs,Partiellement conforme,src/ui/model_pages.py et résultats versionnés pour trois obligatoires,Attendre K-NN SVM et Random Forest
-1.4,2,Optimisation systématique,Partiellement conforme,results/siad03_nb/run_01/search.csv et folds.csv,Confirmer adaptation temporelle et compléter recherches des modèles absents
-1.5,2,Métriques comparatives,Partiellement conforme,tests/test_ui_quality.py et tests/test_ui_app.py vérifient matrices ROC et AP pour cinq classifieurs,Comparer les six obligatoires après livraison
-2.1,1.5,Architecture et stabilité,Testé,src/app.py et tests/test_ui_app.py,Recette sur le poste du rendu
-2.2,1,Six éléments EDA,Testé,src/eda_view.py et tests/test_eda.py et tests/test_ui_quality.py,Relecture pédagogique finale
-2.3,1.5,Prédiction interactive,Testé,tests/test_ui_app.py et tests/test_ui_quality.py pour quatre pipelines et les erreurs,Intégrer les futurs artefacts compatibles
-3.1,1,Structure et discipline,Partiellement conforme,requirements-dev.txt et arborescence src docs tests notebooks,Aligner les points d’entrée collectifs et rationaliser les CSV dérivés
-3.2,2,Contributions individuelles,Implémenté,Historique des fusions du dépôt principal dont PR 5 à 7,Attribution individuelle à vérifier par chaque membre
-4.1,1.5,Rapport PDF collectif,Manquant,docs/contributions/SIAD03.md disponible pour assemblage,Produire docs/Rapport_MiniProject.pdf et anonymiser le plan collectif
-4.2,1.5,README,Implémenté,README.md et docs/INTERFACE.md,Confirmer les codes des deux autres responsables
+critere,points_max,intitule,etat,preuve,limite
+1.1,2,Données et prétraitement,Exécuté et vérifié,src/preprocessing.py et src/models.py et tests/test_cleaning.py,24 variables numériques retenues et aucune catégorie à encoder
+1.2,3,EDA et deux analyses,Exécuté et vérifié,results/audit_siad03/statistiques_principal.csv et statistiques_sensibilite_mois.csv et rapport,Indépendance annuelle incertaine
+1.3,1,Six classifieurs,Exécuté et vérifié,results/benchmark_final/manifest.json et tests/test_final_benchmark.py,K-NN et SVM limités aux tailles documentées
+1.4,2,Recherche et cinq plis,Exécuté et vérifié,results/benchmark_final/*_cv.csv et manifest.json,Accord pédagogique sur adaptation chronologique à confirmer
+1.5,2,Métriques et courbes,Exécuté et vérifié,results/benchmark_final/metrics.csv et courbes_2024.png et results/test_final/result.json,2025 évalué pour la seule règle gelée
+2.1,1.5,Application locale,Exécuté et vérifié,src/app.py et tests/test_ui_app.py,Recette sur le poste universitaire
+2.2,1,EDA interactive,Exécuté et vérifié,src/eda_view.py et tests/test_eda.py,Proportions propres au plan de collecte
+2.3,1.5,Classification interactive,Exécuté et vérifié,src/ui/model_pages.py et tests/test_ui_quality.py,Probabilités de classe sur échantillon
+3.1,1,Structure et dépendances,Implémenté,README.md et .github/workflows/tests.yml et requirements-dev.txt,CI hébergée à vérifier après publication
+3.2,2,Contributions Git,Traçable,Historique des PR et commits du lot final SIAD03,Attribution et note individuelles réservées au professeur
+4.1,1.5,Rapport scientifique,Exécuté et vérifié,docs/Rapport_MiniProject.pdf et sa source .md et src/build_report.py,Relecture collective avant rendu
+4.2,1.5,Documentation,Implémenté,README.md et docs/SOURCES.md et docs/INTERFACE.md,Deux codes étudiants à confirmer par leurs titulaires
