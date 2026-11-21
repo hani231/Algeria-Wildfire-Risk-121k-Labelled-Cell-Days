@@ -37,7 +37,7 @@ Le code source du producteur impose un délai pour l’historique des feux, un c
 
 ![Effectifs et part observée par année d’entraînement. Les variations concernent les cellules-jours échantillonnées.](results/siad03_extensions/exploration/annual.png){width=82%}
 
-Le train contient 28 586 positifs sur 104 979 lignes (27,2 %). En 2024 il y en a 643 sur 8 423 (7,6 %). Un modèle trouvant bien la classe dominante peut donc manquer la totalité des détections. L’application permet de contrôler les valeurs manquantes, les distributions, les fréquences et les corrélations après chaque filtre. Une KDE représente la distribution d’une mesure de l’échantillon.
+Le train contient 28 586 positifs sur 104 979 lignes (27,2 %). En 2024 il y en a 643 sur 8 423 (7,6 %). Un modèle trouvant bien la classe dominante peut donc manquer la totalité des détections. L’application permet de contrôler les valeurs manquantes, les distributions, les fréquences et les corrélations après chaque filtre. Les 24 entrées du modèle sont déjà numériques. Aucun encodage de catégories n’est nécessaire. Une KDE représente la distribution d’une mesure de l’échantillon.
 
 \newpage
 
@@ -52,11 +52,35 @@ Pour chacune des deux variables, on compare les moyennes des classes dans chaque
 
 Dans les deux analyses, les douze années vont dans le sens d’une température plus élevée et d’une humidité plus basse les jours positifs. Pour chaque variable, p brute = 0,00048828. Holm corrige les deux tests de chaque famille, avec p ajustée = 0,00097656. La sensibilité mensuelle réduit l’amplitude des différences. Elle réutilise les mêmes observations. L’indépendance des saisons demeure incertaine et les associations ne permettent aucune conclusion causale.
 
+![Écarts annuels entre les jours avec et sans détection, après appariement par cellule et année. Source : entraînement 2012–2023.](figures/ecarts_annuels.png){width=74%}
+
+\newpage
+
+# Distributions et corrélations sur le train
+
+![Distribution des variables observées selon la classe sur le train. La superposition des distributions limite la séparation par une mesure isolée.](figures/distributions_train.png){width=84%}
+
+![Corrélations entre variables numériques du train. Des mesures météo liées peuvent transmettre une information similaire au modèle.](figures/correlations_train.png){width=68%}
+
 # Évaluation chronologique
 
 Le train couvre 2012–2023. Chaque pli interne valide une année entière de 2019 à 2023 et n’apprend que sur les années antérieures. Cette adaptation du K-Fold demandé empêche l’apprentissage sur des années futures. Son acceptation pédagogique reste à confirmer. Le choix interne maximise le F1 moyen de la classe 1 à seuil 0,50. Imputation médiane, standardisation et pondérations sont apprises sur le sous-ensemble d’apprentissage de chaque pli.
 
 La validation 2024 compare ensuite les six modèles et les seuils 0,20, 0,35 et 0,50 par F1. À égalité, priorité au seuil le plus élevé puis à l’ordre alphabétique. La règle et les candidats étaient fixés avant cette comparaison. L’examen historique répété de 2024 limite l’indépendance de toute estimation sur cette saison. L’artefact gagnant et son seuil ont été gelés dans Git avant l’ouverture de 2025. Aucun réajustement sur 2012–2024.
+
+\newpage
+
+# Variabilité entre saisons
+
+{{PLIS}}
+
+Chaque colonne annuelle donne le F1 obtenu en validant sur cette seule année au seuil 0,50. La moyenne accorde le même poids à chaque saison. L’écart-type décrit les cinq scores observés. Il ne constitue pas un intervalle de confiance. La population de cellules et la fréquence des positifs varient entre saisons. Ces différences peuvent modifier le F1 même avec les mêmes hyperparamètres.
+
+# Effet du nombre de lignes
+
+{{TAILLES}}
+
+Expérience complémentaire postérieure au gel. Chaque taille utilise trois tirages stratifiés (42, 43 et 44), les paramètres publiés et la validation 2024 entière. Les temps sont des moyennes en secondes. La dispersion décrit ici les tirages sur une même saison. La calibration interne du SVM utilise les observations du sous-ensemble d’apprentissage, sans contrainte chronologique interne. Les cinq plis externes restent chronologiques. Ces mesures ne modifient aucune décision publiée.
 
 \newpage
 
@@ -102,11 +126,17 @@ Au seuil 0,50, le F1 de GaussianNB tombe de 0,410 en CV à 0,174 en 2024. La fr�
 
 Pour le SVM au seuil 0,20, le rappel 2024 varie de 0,585 en septembre à 0,941 en août. Le score de Brier vaut 0,110 sur la saison. Les probabilités dépendent de l’échantillonnage et de la calibration interne. Dans l’analyse historique de la régression logistique, permuter FWI ou température moyenne *à l’intérieur des mois* abaisse l’AP d’environ 0,041 et 0,040. Ces perturbations de variables corrélées ne prouvent pas un effet causal. Le bootstrap historique de cellules (300 réplications) donne un intervalle de F1 [0,1655 ; 0,2041] pour la régression logistique sur 2024. Il ne mesure pas l’incertitude d’une saison future.
 
+\newpage
+
 # Résultat final sur 2025
 
 Le SVM au seuil 0,20 obtient un F1 de 0,176646 sur la validation utilisée pour le sélectionner. Au seuil 0,35, il obtenait 0,175832. Les choix très proches renforcent l’intérêt du test réservé. Le modèle de 3 500 observations a été conservé à l’identique, avec vérification des empreintes SHA-256 de l’artefact, de la configuration et du CSV avant l’évaluation.
 
 {{TEST}}
+
+![Détections et alertes du SVM gelé, seuil 0,20. Source : évaluation finale 2025.](docs/confusion_2025.png){width=47%}
+
+Sur 100 alertes émises, environ 16 correspondent à une détection étiquetée. Le résultat concerne la population échantillonnée. À titre de repère descriptif, annoncer une détection sur chaque ligne donnerait un F1 de 0,234 contre 0,263 pour le SVM.
 
 Sur 8 467 lignes, le résultat final comprend **900 vrais positifs, 222 faux négatifs, 4 814 faux positifs et 2 531 vrais négatifs**. La hausse du F1 intervient dans un échantillon comptant davantage de positifs (13,3 %). La ROC-AUC reste modeste. Cette expérience soutient une classification rétrospective exploratoire. Une alerte opérationnelle demanderait des mesures connues à l’avance, une évaluation prospective et une estimation des coûts des erreurs.
 
@@ -120,6 +150,6 @@ Command Center synthétise la couverture. Data Explorer partage les filtres entr
 
 Le dépôt collectif apporte les observations, le cadrage et un arbre historique. Le lot SIAD03 comprend audit, nettoyage, statistiques, EDA, Zero-R/NB et interface. La branche d’intégration SIAD03 ajoute les recherches K-NN, SVM, forêt et arbre compatible, le gel du modèle et ce rapport, avec assistance de développement. Le plan initial décrit une répartition prévue. L’historique Git établit les livraisons effectives.
 
-Depuis la racine, installer *requirements-dev.txt* sous Python 3.12. Lancer *python -m pytest -q* puis *python -m streamlit run src/app.py*. La commande *python -m src.models --output results/local_runs/benchmark* répète le développement dans un dossier neuf. Le README décrit la reproduction séparée du test gelé et de ce PDF. Les prédictions, paramètres par pli, versions et empreintes sont disponibles dans *results/benchmark_final/*.
+Depuis la racine, installer `requirements-dev.txt` sous Python 3.12. Lancer `python -m pytest -q` puis `python -m streamlit run src/app.py`. La commande `python -m src.models --output results/local_runs/benchmark` répète le développement dans un dossier neuf. Le README décrit la reproduction séparée du test gelé et de ce PDF. Les prédictions, paramètres par pli, versions et empreintes sont disponibles dans *results/benchmark_final/*.
 
 **Références.** [Cahier du mini-projet](https://github.com/hosniadilemp-a11y/DataMiningProjectPage) · [Dictionnaire du producteur](https://github.com/Abdelmalek05/fire-detection-model/blob/0755f4e47f54a9e582b4f53d28f2a610098bbf1c/docs/DATASET.md) · [Jeu de données](https://www.kaggle.com/datasets/abdelmaleknedjar/algeria-wildfire-risk-121k-labelled-cell-days) · [Validation croisée scikit-learn](https://scikit-learn.org/stable/modules/cross_validation.html) · [Test binomial exact SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.binomtest.html). Données sous CC BY 4.0, attributions complètes dans *docs/SOURCES.md*.

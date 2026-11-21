@@ -7,3 +7,13 @@ Les cellules de 0,1° couvrent un rectangle débordant notamment sur le Maroc, l
 Dans le code producteur, la recherche dans les dates de feu retient le feu strictement antérieur à jour moins quatre jours (9999 si aucun événement). Le composite NDVI de 16 jours doit être clos avant le jour étudié. La normale est issue de 2000–2011 et l’anomalie vaut NDVI moins normale. Le CSV distribué ne contient ni les dates sources des composites ni l’historique FIRMS complet ni les observations de climatologie. Le dépôt producteur distribue un échantillon, sans manifeste associant son code de construction à l’empreinte du CSV complet local. La comparaison principale conserve donc les 24 variables historiques. L’ablation documentée utilise un sous-ensemble de ces variables. [Construction du combustible](https://github.com/Abdelmalek05/fire-detection-model/blob/0755f4e47f54a9e582b4f53d28f2a610098bbf1c/src/firerisk/features.py) · [Construction du NDVI](https://github.com/Abdelmalek05/fire-detection-model/blob/0755f4e47f54a9e582b4f53d28f2a610098bbf1c/src/firerisk/ndvi.py)
 
 Sur les 3 348 lignes de développement de l’échantillon public retrouvées par cellule/date, les six colonnes de combustible et de végétation concordent numériquement avec le CSV local. Dans le train, l’âge NDVI minimal est d’un jour et la durée minimale depuis un feu de cinq jours. Toutefois la reconstruction à partir des seules détections positives du train, avec recherche strictement avant jour moins quatre, diffère du champ stocké dans 7 481 des 98 822 cas ayant un antécédent visible. Le panel échantillonné ne contient donc pas toute l’information requise pour certifier cet historique. L’identité algébrique de l’anomalie NDVI et un échantillon concordant ne permettent pas non plus de vérifier les dates sources des normales pour chaque cellule. Les trois champs restent exclus.
+
+Pour reproduire la jointure unique par cellule et date et la recherche du dernier événement visible strictement antérieur à J−4, depuis la racine du projet :
+
+```bash
+git clone https://github.com/Abdelmalek05/fire-detection-model.git ../fire-detection-model
+git -C ../fire-detection-model checkout --detach 0755f4e47f54a9e582b4f53d28f2a610098bbf1c
+python -m src.source_check ../fire-detection-model/data/sample/dataset_sample.csv
+```
+
+Les empreintes SHA-256, les effectifs et les différences par champ sont consignés dans [le contrôle reproduit](../results/audit_siad03/source_check.json). Les valeurs numériques sont comparées avec les tolérances par défaut de NumPy (rtol 1e-5, atol 1e-8), les valeurs manquantes aux mêmes positions sont considérées égales.

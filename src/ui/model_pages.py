@@ -91,6 +91,10 @@ def prediction():
         st.warning('Aucun pipeline compatible disponible.')
         return
     name = st.selectbox('Pipeline', names)
+    final = decision()
+    threshold = final['threshold'] if final['model'] == name else .5
+    st.caption(f"Seuil appliqué à cette observation : {threshold:.2f}. "
+               "Le comparatif des modèles sur 2024 utilise 0,50 pour tous.")
     model = pipeline(name)
     features = list(model.feature_names_in_)
     summary = input_summary(tuple(features))
@@ -119,8 +123,6 @@ def prediction():
             st.info('Ajustez les mesures puis lancez la classification.')
             return
         try:
-            final = decision()
-            threshold = final['threshold'] if final['model'] == name else .5
             label, score = classify(model, values, threshold)
             st.caption(f'Seuil de classification : {threshold:.2f}')
         except ValueError as error:

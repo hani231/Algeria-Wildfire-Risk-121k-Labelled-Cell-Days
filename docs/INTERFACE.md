@@ -38,3 +38,11 @@ Les sélections de Data Explorer sont conservées pendant la navigation. « Réi
 Model Arena distingue les six classifieurs demandés et les deux supplémentaires. Pour GaussianNB, le classement et les courbes utilisent le benchmark final qui reproduit run_01 (F1 0,173585). Le benchmark antérieur obtenait 0,176681. L’accuracy de Zero-R atteint 92,37 % en classant toutes les lignes en 0, avec 643 détections manquées.
 
 Dans le studio, les libellés précisent les unités établies ou signalent leur incertitude. Une incompatibilité de version ou de schéma interrompt le chargement. Les contrôles sur les entrées précèdent la classification. Les probabilités concernent la classe de l’observation dans cet échantillon.
+
+## Recette avant la soutenance
+
+1. Lancer l’application sur le poste de présentation. Ouvrir les six espaces, puis répéter en écran étroit. Vérifier que les tableaux restent accessibles et que le formulaire peut être soumis.
+2. Dans Exploration, sélectionner une année et un mois, vérifier l’effectif et exporter. Réinitialiser les filtres et comparer au total du train.
+3. Dans Carte, retirer tous les mois, puis en sélectionner un. Vérifier le message pour une sélection vide et le retour des cellules sur la carte.
+4. Dans Modèles, comparer les F1 sur 2024 au seuil 0,50, puis afficher la matrice et les courbes du SVM. Dans Prédiction, vérifier le seuil 0,20 avant et après avoir soumis l’exemple.
+5. Dans Méthodologie, comparer l’appariement annuel et mensuel. Les graphiques doivent suivre la sélection. Noter le navigateur et la largeur d’écran effectivement utilisés.

@@ -1,5 +1,6 @@
 """Compiler le rapport éditable et ses graphiques à partir des résultats versionnés."""
 import json
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -15,9 +16,20 @@ from src.siad03_extensions.data import ROOT
 def table(frame):
     def format_value(value):
         return f'{value:.3f}'.replace('.', ',') if isinstance(value, float) else str(value)
-    lines = [list(frame.columns), ['---']*len(frame.columns)]
-    lines.extend([[format_value(value) for value in row] for row in frame.itertuples(index=False, name=None)])
-    return '\n'.join('| ' + ' | '.join(row) + ' |' for row in lines)
+    # Tables compactes : les en-têtes et noms de modèles gardent leur largeur naturelle.
+    from string import Template
+    def escape(value):
+        return value.replace('_', r'\_').replace('%', r'\%').replace('&', r'\&')
+    rows = [list(frame.columns), *frame.itertuples(index=False, name=None)]
+    body = '\n'.join(' & '.join(escape(format_value(v)) for v in row) + r' \\'
+                     for row in rows)
+    return Template(r"""\begin{center}\small
+\begin{tabular}{$align}
+\hline
+$body
+\hline
+\end{tabular}
+\end{center}""").substitute(align='l'+'r'*(len(frame.columns)-1), body=body)
 
 
 def build():
@@ -47,7 +59,31 @@ def build():
                'balanced_accuracy':'Acc. éq.', 'roc_auc':'ROC', 'average_precision':'AP'}
     core = metrics.rename_axis('Modèle').reset_index()
     ablation = pd.read_csv(LOT/'ablation_train.csv').groupby('groupe',sort=False)[['f1','average_precision']].mean()
+    years = json.loads((ROOT/'config/protocole.json').read_text())['cv_annees_validation']
+    folds = []
+    for name in metrics.index:
+        search = pd.read_csv(LOT/f'{name}_cv.csv')
+        selected = search.loc[search.mean_test_score.idxmax()]
+        folds.append({'Modèle': name, **{str(year): selected[f'split{i}_test_score']
+                      for i, year in enumerate(years)}, 'Moy.': selected.mean_test_score,
+                      'Éc. type': selected.std_test_score})
+    sizes = pd.read_csv(ROOT/'results/post_freeze/size_2024/learning_curves.csv')
+    summary = sizes.groupby(['model', 'n_fit']).agg(
+        F1=('f1', 'mean'), dispersion=('f1', 'std'), fit=('fit_seconds', 'mean'),
+        predict=('predict_seconds', 'mean')).reset_index()
+    summary.columns = ['Modèle', 'Lignes', 'F1', 'Éc. type', 'Ajust. (s)', 'Préd. (s)']
+    fig, ax = plt.subplots(figsize=(4, 2.5), layout='constrained')
+    matrix = [[final['tn'], final['fp']], [final['fn'], final['tp']]]
+    ax.imshow(matrix, cmap='Blues')
+    for i, row in enumerate(matrix):
+        for j, count in enumerate(row):
+            ax.text(j, i, str(count), ha='center', va='center',
+                    color='white' if count > final['fp']*.65 else 'black')
+    ax.set(xticks=[0,1], yticks=[0,1], xlabel='Classe prédite', ylabel='Classe observée')
+    fig.savefig(docs/'confusion_2025.png', dpi=160)
+    plt.close(fig)
     tables = {
+        'PLIS': pd.DataFrame(folds), 'TAILLES': summary,
         'SCORES': core[['Modèle',*columns]].rename(columns=columns),
         'COUTS': core[['Modèle','cv_f1','search_seconds','fit_seconds','predict_seconds']].rename(columns={
             'cv_f1':'F1 CV','search_seconds':'Recherche (s)','fit_seconds':'Ajustement (s)','predict_seconds':'Scores (s)'}),
@@ -56,12 +92,22 @@ def build():
         'TEST': pd.DataFrame([{label:final[key] for key,label in columns.items()}]),
     }
     source = (docs/'Rapport_MiniProject.md').read_text()
+    engine = os.environ.get('PANDOC_PDF_ENGINE', 'xelatex')
     for key, frame in tables.items():
-        source = source.replace('{{'+key+'}}', table(frame))
+        source = source.replace('{{'+key+'}}', frame.to_html(index=False, float_format=lambda value: f'{value:.3f}'.replace('.', ','))
+                                if engine == 'weasyprint' else table(frame))
     with tempfile.TemporaryDirectory() as folder:
         expanded = Path(folder)/'report.md'
+        if engine == 'weasyprint':
+            source = source.replace(r'\newpage', '<div style="break-after:page"></div>')
+            html = subprocess.run(['pandoc','--from=markdown','--to=html5','--standalone',
+                                   '--mathml', '--css', 'docs/rapport.css'], input=source, text=True, capture_output=True, check=True)
+            from weasyprint import HTML
+            HTML(string=html.stdout, base_url=str(ROOT)+'/').write_pdf(
+                docs/'Rapport_MiniProject.pdf')
+            return
         expanded.write_text(source,encoding='utf-8')
-        subprocess.run(['pandoc',str(expanded),'--pdf-engine=xelatex','-o',str(docs/'Rapport_MiniProject.pdf')],
+        subprocess.run(['pandoc',str(expanded),'--pdf-engine='+os.environ.get('PANDOC_PDF_ENGINE','xelatex'),'-o',str(docs/'Rapport_MiniProject.pdf')],
                        cwd=ROOT, check=True)
 
 
