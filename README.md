@@ -6,6 +6,13 @@ Wildfire Atlas compare six classifieurs supervisés sur des cellules-jours et pe
 
 ## Lancement local
 
+Depuis un terminal, télécharger le projet collectif :
+
+```bash
+git clone https://github.com/hani231/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days.git
+cd Algeria-Wildfire-Risk-121k-Labelled-Cell-Days
+```
+
 Depuis le clone contenant la branche du benchmark final, utiliser Python 3.12. Sous PowerShell :
 
 ```powershell
@@ -70,6 +77,18 @@ python -m src.build_report
 ```
 
 L’avant-dernière commande reproduit uniquement l’évaluation du **modèle publié et gelé**. Elle vérifie la décision inscrite dans Git et les empreintes des données, de la configuration et de l’artefact. La génération du PDF utilise Pandoc et XeLaTeX installés sur le système. Le gabarit Markdown accepte des tableaux injectés depuis les CSV et la figure ROC/PR est régénérée à partir des scores. Les versions du lot et les temps sont inclus dans le manifeste et les CSV. L’installation locale de l’app se limite aux dépendances Python.
+
+## Expériences complémentaires et vérification
+
+Après le gel, l’expérience de taille conserve les réglages du benchmark et mesure trois tirages par taille sur 2024. Le CSV comporte le F1 au seuil 0,50 et les temps de calcul. Le résultat de chaque tirage est accessible dans [le tableau complet](results/post_freeze/size_2024/learning_curves.csv).
+
+```bash
+python -m src.learning_curves --output results/local_runs/size_2024
+```
+
+Le PDF livré a été produit avec Pandoc et WeasyPrint. Pour utiliser ce moteur, installer `weasyprint==70.0` avec ses dépendances système et définir la variable d’environnement `PANDOC_PDF_ENGINE` à `weasyprint` avant de lancer `python -m src.build_report`. Le moteur par défaut reste XeLaTeX.
+
+Le brut versionné sous `Dataset/` est la source commune. Il remplit le rôle du répertoire `data/raw/` dans le plan du professeur. Garder une seule copie évite deux versions concurrentes. Le notebook 01 exécute le nettoyage et écrit les exports historiques. Pour l’exécuter sans écraser ses propres exports, utiliser un clone de travail. Le notebook 02 vérifie les entrées numériques et les plis. Le notebook 03_model_training_evaluation relit les paramètres et les scores du benchmark. Le notebook 03_zeror_naive_bayes reproduit l’expérience historique distincte.
 
 ## Organisation et contributions
 
