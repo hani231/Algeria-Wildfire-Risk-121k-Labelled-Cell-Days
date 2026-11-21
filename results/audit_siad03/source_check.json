@@ -1,0 +1,16 @@
+{
+  "raw_sha256": "cc260f954f76651c745c688c51e962a5fdbc4ee92d487ecd5577ba2aff7ecc26",
+  "sample_sha256": "4f543a74241eeb3e1bebfb51f9b8486b68d5e40d58b454f38fcd264294aad46f",
+  "public_development": 3348,
+  "matched": 3348,
+  "differences": {
+    "days_since_last_fire": 0,
+    "ndvi": 0,
+    "ndvi_normal": 0,
+    "ndvi_anomaly": 0,
+    "ndvi_change_32d": 0,
+    "ndvi_stale_days": 0
+  },
+  "visible_history": 98822,
+  "different_history": 7481
+}
