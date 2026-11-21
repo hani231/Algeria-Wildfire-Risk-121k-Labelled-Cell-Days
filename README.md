@@ -104,3 +104,15 @@ Le brut versionné sous `Dataset/` est la source commune. Il remplit le rôle du
 | Responsable de l’intégration (code à confirmer) | Arbre historique et résultats associés. L’arbre du benchmark commun a été réentraîné dans le lot SIAD03 |
 
 Le plan de démarrage est conservé dans une version publique anonymisée. Les contributions se vérifient par commit. Les documents des premiers lots décrivent leur état à la date de rédaction. [Plan initial](docs/Plan_initial_equipe.pdf)
+
+Les variantes complémentaires isolent certains effets du nombre de voisins, de la pondération, de la profondeur, de l’élagage, du nombre d’arbres ou du noyau. Elles utilisent les cinq plis du train et laissent le modèle publié inchangé. GaussianNB dispose déjà de 14 valeurs de lissage dans le benchmark. Reproduction dans un dossier neuf :
+
+```bash
+python -m src.parameter_sensitivity --output results/local_runs/parameters
+```
+
+![F1 de validation 2024 selon la taille d’apprentissage, trois tirages par modèle](results/post_freeze/size_2024/learning_curves.png)
+
+À 6 000 puis 12 000 lignes, le F1 moyen de K-NN reste voisin de 0,128. Pour SVM, les trois moyennes se situent entre 0,119 et 0,123. Sur cette saison et au seuil de 0,50, augmenter la taille dans la plage étudiée ne garantit donc pas un gain.
+
+Sur les cinq saisons internes, retirer la pondération des classes de la forêt fait passer son F1 moyen de 0,4305 à 0,3927. Passer de 32 à 48 arbres le porte à 0,4317. Ces comparaisons dépendent des autres réglages maintenus constants. [Scores par pli et paramètres modifiés](results/post_freeze/parameters)

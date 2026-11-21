@@ -25,3 +25,15 @@ def test_source_history_excludes_four_day_boundary(tmp_path):
     assert result['matched'] == 6
     assert result['visible_history'] == 1 and result['different_history'] == 0
     assert not any(result['differences'].values())
+
+
+def test_parameter_study_reproduces_published_folds_for_control():
+    paths = list((ROOT/'results/post_freeze/parameters').glob('*.csv'))
+    assert {path.stem for path in paths} == {'K-NN', 'DecisionTree', 'Random Forest', 'SVM'}
+    for path in paths:
+        study = pd.read_csv(path)
+        published = pd.read_csv(LOT/f'{path.stem}_cv.csv')
+        columns = [f'split{i}_test_score' for i in range(5)]
+        best = published.loc[published.mean_test_score.idxmax()]
+        assert study.iloc[0].params == '{}'
+        np.testing.assert_allclose(study.loc[0, columns].astype(float), best[columns].astype(float))
