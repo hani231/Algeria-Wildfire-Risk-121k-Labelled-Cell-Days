@@ -116,3 +116,13 @@ python -m src.parameter_sensitivity --output results/local_runs/parameters
 À 6 000 puis 12 000 lignes, le F1 moyen de K-NN reste voisin de 0,128. Pour SVM, les trois moyennes se situent entre 0,119 et 0,123. Sur cette saison et au seuil de 0,50, augmenter la taille dans la plage étudiée ne garantit donc pas un gain.
 
 Sur les cinq saisons internes, retirer la pondération des classes de la forêt fait passer son F1 moyen de 0,4305 à 0,3927. Passer de 32 à 48 arbres le porte à 0,4317. Ces comparaisons dépendent des autres réglages maintenus constants. [Scores par pli et paramètres modifiés](results/post_freeze/parameters)
+
+## Réévaluation du 24 novembre
+
+Le benchmark actif conserve ses 24 entrées, ses validations chronologiques et le SVM gelé. La réévaluation ajoute un diagnostic classique KFold à cinq plis sur 2012–2023. Les scores d’apprentissage et de validation complémentaires sont comparés aux mêmes hyperparamètres gelés. Reproduire le diagnostic dans un répertoire neuf :
+
+```bash
+python -m src.kfold_diagnostic --output results/local_runs/diagnostic_kfold
+```
+
+L’auteur du lot secondaire a ajouté les notebooks 04_knn et acp, le résumé K-NN et quatre objets sérialisés avec scikit-learn 1.9.0. Ces notebooks emploient 25 entrées dont ndvi_normal. Leur reproduction se fait dans un environnement distinct de celui de Wildfire Atlas (1.8.0). Avec 12 composantes et 2 001 voisins, leur Average Precision sur 2024 est 0,105225. Le registre de l’application continue de charger les pipelines du benchmark publié. [Audit des douze critères, vérifications et proposition au responsable](docs/AUDIT_REEVALUATION.md) · [Rapport collectif](docs/Rapport_MiniProject.pdf)

@@ -48,3 +48,26 @@ def test_final_score_matches_frozen_decision():
     assert predictions.year.eq(2025).all() and len(predictions) == 8467
     for key, value in metrics(predictions.label, predictions.score, frozen['threshold']).items():
         assert result[key] == pytest.approx(value)
+
+
+@pytest.mark.parametrize('name', MANDATORY)
+def test_frozen_parameters_match_search_and_serialized_pipeline(name, development):
+    from ast import literal_eval
+    from sklearn.model_selection import ParameterGrid
+    from src.models import candidates, limited
+    train, _, _, folds, _ = development
+    config = json.loads(CONFIG.read_text())
+    entry = json.loads((LOT/'manifest.json').read_text())['models'][name]
+    cv = pd.read_csv(LOT/f'{name}_cv.csv')
+    _, grid = candidates(name, config['seed'])
+    assert list(cv.params.map(literal_eval)) == list(ParameterGrid(grid))
+    fold_scores = cv[[f'split{i}_test_score' for i in range(5)]]
+    np.testing.assert_allclose(fold_scores.mean(axis=1), cv.mean_test_score)
+    winner = cv.iloc[fold_scores.mean(axis=1).argmax()]
+    assert literal_eval(winner.params) == entry['params']
+    params = joblib.load(LOT/(name+'.joblib')).get_params()
+    assert all(params[key] == value for key, value in entry['params'].items())
+    for i, (fit, check) in enumerate(folds):
+        selected = limited(fit, train.label, config['train_caps'].get(name), config['seed'])
+        assert (len(selected), len(check)) == (entry['fold_fit'][i], entry['fold_check'][i])
+        assert train.year.iloc[selected].max() < train.year.iloc[check].min()

@@ -73,3 +73,38 @@ def test_svm_threshold_visible_before_submission():
     app.radio(key='page').set_value('Prédiction').run()
     app.selectbox[0].set_value('SVM').run()
     assert any('0.20' in item.value and '0,50' in item.value for item in app.caption)
+
+
+def test_studio_retains_inputs_and_hides_obsolete_results():
+    app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=60).run()
+    app.radio(key='page').set_value('Prédiction').run()
+    app.selectbox(key='studio_model').set_value('SVM').run()
+    app.number_input(key='studio_input_doy').set_value(200).run()
+    app.button[0].click().run()
+    result = app.metric[0].value
+    app.radio(key='page').set_value('Accueil').run()
+    app.radio(key='page').set_value('Prédiction').run()
+    assert app.number_input(key='studio_input_doy').value == 200
+    assert app.selectbox(key='studio_model').value == 'SVM'
+    assert app.metric[0].value == result
+    app.number_input(key='studio_input_doy').set_value(201).run()
+    assert not app.metric and 'Relancez' in app.info[0].value
+    app.radio(key='page').set_value('Accueil').run()
+    app.radio(key='page').set_value('Prédiction').run()
+    assert app.number_input(key='studio_input_doy').value == 201
+    assert not app.metric
+
+
+def test_test_cohort_displays_published_metrics_without_inference(monkeypatch):
+    import json
+    published = json.loads((ROOT/'results/test_final/result.json').read_text())
+    app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=60).run()
+    app.radio(key='page').set_value('Modèles').run()
+    def unexpected(*args, **kwargs):
+        raise AssertionError('Le panneau de lecture ne charge aucun estimateur')
+    monkeypatch.setattr('src.ui.model_pages.pipeline', unexpected)
+    app.radio(key='arena_cohort').set_value('Test final 2025').run()
+    assert not app.exception and not app.error
+    assert [item.value for item in app.metric] == [
+        f'{published[key]:.3f}' for key in ('precision', 'recall', 'f1')]
+    assert not app.selectbox
