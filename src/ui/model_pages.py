@@ -19,8 +19,11 @@ DESCRIPTIONS = {
 
 
 def models():
-    view = st.radio('Évaluation à consulter', ['Comparaison 2024', 'Test final 2025'],
+    view = st.radio('Évaluation à consulter', ['Comparaison 2024', 'Alertes du SVM en 2024', 'Test final 2025'],
                     horizontal=True, key='arena_cohort')
+    if view == 'Alertes du SVM en 2024':
+        validation_alerts()
+        return
     if view == 'Test final 2025':
         published_result()
         return
@@ -88,6 +91,35 @@ def models():
     final = decision()
     st.caption(f"Décision gelée sur 2024 : {final['model']}, seuil {final['threshold']:.2f}. "
                "Les matrices comparatives affichées ci-dessus utilisent toutes le seuil 0,50.")
+
+
+def validation_alerts():
+    source = ROOT / 'results/post_freeze/alerts_2024'
+    thresholds = pd.read_csv(source / 'thresholds.csv')
+    months = pd.read_csv(source / 'months.csv')
+    bins = pd.read_csv(source / 'reliability.csv')
+    frozen = decision()
+    row = thresholds.set_index('threshold').loc[frozen['threshold']]
+    st.subheader('Combien de fausses alertes pour une détection retrouvée ?')
+    st.write(f"{frozen['model']} au seuil retenu de {frozen['threshold']:.2f} · "
+             f"{int(row.tp)} des {int(row.positives)} détections retrouvées et "
+             f"{int(row.fp)} fausses alertes sur {int(row.n)} cellules-jours de validation.")
+    names = {'threshold': 'Seuil', 'tp': 'Détections retrouvées', 'fp': 'Fausses alertes',
+             'fn': 'Détections manquées', 'precision': 'Précision', 'recall': 'Rappel', 'f1': 'F1'}
+    st.dataframe(thresholds[list(names)].rename(columns=names), hide_index=True, width='stretch')
+    st.caption('Les trois seuils ont été comparés sur la même saison. Le F1 a servi à la sélection. '
+               'Les effectifs permettent de discuter le coût des alertes.')
+    with st.expander('Erreurs par mois au seuil retenu'):
+        st.dataframe(months[['month', 'n', 'positives', 'tp', 'fp', 'fn']].rename(
+            columns={**names, 'month': 'Mois', 'n': 'Cellules-jours', 'positives': 'Positifs'}),
+            hide_index=True, width='stretch')
+    with st.expander('Fiabilité du score sur l’échantillon de validation'):
+        st.dataframe(bins.rename(columns={'bin': 'Intervalle du score', 'n': 'Effectif',
+                                          'predicted': 'Score moyen', 'observed': 'Fraction positive'}),
+                     hide_index=True, width='stretch')
+        st.caption('Comparer le score moyen et la fraction positive dans chaque tranche occupée. '
+                   'Les petits effectifs rendent ces fractions instables. Les témoins échantillonnés '
+                   'et la météo du jour limitent la portée à une classification rétrospective.')
 
 
 def published_result():
