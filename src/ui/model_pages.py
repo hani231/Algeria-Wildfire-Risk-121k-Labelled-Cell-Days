@@ -1,4 +1,5 @@
 """Comparer les résultats puis interroger les pipelines entraînés."""
+import json
 import pandas as pd
 import streamlit as st
 from src.ui.curves import curves
@@ -18,6 +19,11 @@ DESCRIPTIONS = {
 
 
 def models():
+    view = st.radio('Évaluation à consulter', ['Comparaison 2024', 'Test final 2025'],
+                    horizontal=True, key='arena_cohort')
+    if view == 'Test final 2025':
+        published_result()
+        return
     st.caption('Validation 2024 · Seuil de décision 0,5 · F1 de la classe avec détection')
     table = comparison()
     metrics = ['accuracy','precision','recall','f1','balanced_accuracy','roc_auc','average_precision']
@@ -82,6 +88,32 @@ def models():
     final = decision()
     st.caption(f"Décision gelée sur 2024 : {final['model']}, seuil {final['threshold']:.2f}. "
                "Les matrices comparatives affichées ci-dessus utilisent toutes le seuil 0,50.")
+
+
+def published_result():
+    result = json.loads((ROOT/'results/test_final/result.json').read_text())
+    frozen = decision()
+    if (result['model'], result['threshold']) != (frozen['model'], frozen['threshold']):
+        raise ValueError('Le résultat publié diffère de la décision gelée.')
+    st.subheader(f"{result['model']} · test final au seuil {result['threshold']:.2f}")
+    st.caption(f"{result['n']:,} cellules-jours en 2025 · choix gelé dans {result['freeze_commit'][:7]}")
+    for col, key, title in zip(st.columns(3), ('precision', 'recall', 'f1'), ('Précision', 'Rappel', 'F1')):
+        col.metric(title, f"{result[key]:.3f}")
+    detected, alerts = st.columns(2)
+    with detected.container(border=True):
+        st.subheader('Détections retrouvées')
+        st.progress(result['recall'])
+        st.write(f"{result['tp']:,} retrouvées sur {result['positives']:,} jours positifs. "
+                 f"{result['fn']:,} détections ont été manquées.")
+    with alerts.container(border=True):
+        st.subheader('Alertes émises')
+        st.progress(result['precision'])
+        st.write(f"{result['tp']:,} alertes correctes sur {result['tp']+result['fp']:,}. "
+                 f"{result['fp']:,} faux positifs dans cet échantillon.")
+    st.caption('Résultat publié après la sélection sur 2024. Le seuil et le modèle restent fixes.')
+    st.dataframe(pd.DataFrame([{'Accuracy': result['accuracy'], 'Accuracy équilibrée': result['balanced_accuracy'],
+                                'ROC-AUC': result['roc_auc'], 'Average Precision': result['average_precision']}]),
+                 hide_index=True, width='stretch')
 
 
 def prediction():
