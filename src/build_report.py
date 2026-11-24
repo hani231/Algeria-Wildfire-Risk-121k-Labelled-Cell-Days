@@ -86,7 +86,11 @@ def build():
     paired = diagnostic.groupby('model')[['f1_fit','f1_check']].mean().reindex(metrics.index)
     paired['Chronologique'] = metrics.cv_f1
     paired = paired.rename(columns={'f1_fit':'KFold apprentissage', 'f1_check':'KFold validation'})
+    alerts = pd.read_csv(ROOT/'results/post_freeze/alerts_2024/thresholds.csv')
     tables = {
+        'ALERTES': alerts[['threshold', 'tp', 'fp', 'fn', 'precision', 'recall']].rename(
+            columns={'threshold': 'Seuil', 'tp': 'VP', 'fp': 'FP', 'fn': 'FN',
+                     'precision': 'Précision', 'recall': 'Rappel'}),
         'KFOLD': paired.rename_axis('Modèle').reset_index(),
         'PLIS': pd.DataFrame(folds), 'TAILLES': summary,
         'SCORES': core[['Modèle',*columns]].rename(columns=columns),

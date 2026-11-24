@@ -43,7 +43,7 @@ Le train contient 28 586 positifs sur 104 979 lignes (27,2 %). En 2024 il y en a
 
 # Associations de température et d’humidité
 
-Pour chacune des deux variables, on compare les moyennes des classes dans chaque couple cellule/année où les deux classes existent. On calcule ensuite les écarts moyens annuels. Cette agrégation réduit la pseudo-réplication des cellules-jours. Le test binomial exact des signes porte sur les années aux écarts non nuls. Sous H0, un écart positif a une probabilité de 0,5. H1 est bilatérale. Le choix du test évite une hypothèse de normalité sur douze amplitudes annuelles.
+Pour chacune des deux variables, on compare les moyennes des classes dans chaque couple cellule/année où les deux classes existent. On calcule ensuite les écarts moyens annuels. Cette agrégation réduit la pseudo-réplication des cellules-jours. Le test binomial exact des signes porte sur les années aux écarts non nuls. Chaque année contribue un signe, quel que soit son nombre de cellules. Sous H0, un écart positif a une probabilité de 0,5 parmi les années sans égalité. H1 est bilatérale. Le choix du test évite une hypothèse de normalité sur douze amplitudes annuelles.
 
 | Appariement | Écart moyen de température maximale | Écart moyen d’humidité |
 |---|---:|---:|
@@ -144,9 +144,17 @@ Pour le SVM au seuil 0,20, le rappel 2024 varie de 0,585 en septembre à 0,941 e
 
 \newpage
 
-# Résultat final sur 2025
+# Du choix sur 2024 au résultat final sur 2025
 
-Le SVM au seuil 0,20 obtient un F1 de 0,176646 sur la validation utilisée pour le sélectionner. Au seuil 0,35, il obtenait 0,175832. Les choix très proches renforcent l’intérêt du test réservé. Le modèle de 3 500 observations a été conservé à l’identique, avec vérification des empreintes SHA-256 de l’artefact, de la configuration et du CSV avant l’évaluation.
+Le SVM au seuil 0,20 obtient un F1 de 0,176646 sur la validation utilisée pour le sélectionner. Au seuil 0,35, il obtenait 0,175832. Malgré ces F1 proches, descendre de 0,35 à 0,20 retrouve 216 détections supplémentaires pour 2 216 fausses alertes supplémentaires. Le modèle de 3 500 observations a été conservé à l’identique, avec vérification des empreintes SHA-256 de l’artefact, de la configuration et du CSV avant l’évaluation.
+
+**Validation 2024, 643 détections sur 8 423 observations.** Les trois seuils proviennent du protocole.
+
+{{ALERTES}}
+
+Pour les 1 258 scores de la tranche ]0,4 ; 0,5], le score moyen atteint 44,7 % et la fraction positive observée 10,3 %. Cette comparaison décrit la fiabilité sur la saison ayant servi à la sélection. Une calibration indépendante demanderait une autre cohorte de développement.
+
+**Test final 2025, résultat publié au seuil gelé de 0,20.**
 
 {{TEST}}
 
@@ -162,7 +170,7 @@ Sur 8 467 lignes, le résultat final comprend **900 vrais positifs, 222 faux né
 
 ![Wildfire Atlas. La carte regroupe les cellules-jours observées par cellule.](docs/interface-bureau.png){width=78%}
 
-Command Center synthétise la couverture. Data Explorer partage les filtres entre statistiques descriptives, données manquantes, histogramme/KDE, fréquences, corrélations et export. Geo Intelligence contrôle les coordonnées. Model Arena rattache scores, courbes et matrices à leurs fichiers d’expérience. Prediction Studio conserve les mesures pendant la navigation et affiche le résultat correspondant au modèle, au seuil et aux entrées soumis. Model Arena permet de consulter séparément la décision publiée sur 2025. Scientific Insights présente le protocole et les tests appariés.
+Command Center synthétise la couverture. Data Explorer partage les filtres entre statistiques descriptives, données manquantes, histogramme/KDE, fréquences, corrélations et export. Geo Intelligence contrôle les coordonnées. Model Arena rattache scores, courbes et matrices à leurs fichiers d’expérience. Prediction Studio conserve les mesures pendant la navigation et affiche le résultat correspondant au modèle, au seuil et aux entrées soumis. Model Arena présente les fausses alertes par mois et par seuil en 2024, puis le résultat publié sur 2025 dans une vue distincte. Le studio accepte également un CSV de 24 mesures par ligne et exporte les scores dans l’ordre du fichier. Scientific Insights présente le protocole et les tests appariés.
 
 Le dépôt collectif apporte les observations, le cadrage et un arbre historique. Le lot SIAD03 comprend audit, nettoyage, statistiques, EDA, Zero-R/NB et interface. La branche d’intégration SIAD03 ajoute les recherches K-NN, SVM, forêt et arbre compatible, le gel du modèle et ce rapport, avec assistance de développement. Le plan initial décrit une répartition prévue. L’historique Git établit les livraisons effectives.
 
