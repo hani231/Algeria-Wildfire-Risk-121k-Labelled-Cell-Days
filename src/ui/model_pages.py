@@ -2,6 +2,7 @@
 import json
 import pandas as pd
 import streamlit as st
+from src.ui.batch import batch_panel
 from src.ui.curves import curves
 from src.ui.services import BENCH, BATCHES, decision, ROOT, ARTIFACTS, comparison, input_summary, pipeline, classify
 from src.ui.units import measure_label
@@ -149,7 +150,6 @@ def published_result():
 
 
 def prediction():
-    st.write('Choisissez un modèle puis ajustez les mesures d’une observation. Les valeurs initiales proviennent du premier jour du jeu d’entraînement disponible avec tous les prédicteurs.')
     names = [name for name, path in ARTIFACTS.items() if path.is_file()]
     if not names:
         st.warning('Aucun pipeline compatible disponible.')
@@ -157,11 +157,17 @@ def prediction():
     name = st.selectbox('Pipeline', names, key='studio_model')
     final = decision()
     threshold = final['threshold'] if final['model'] == name else .5
-    st.caption(f"Seuil appliqué à cette observation : {threshold:.2f}. "
+    st.caption(f"Seuil de classification : {threshold:.2f}. "
                "Le comparatif des modèles sur 2024 utilise 0,50 pour tous.")
     model = pipeline(name)
     features = list(model.feature_names_in_)
     summary = input_summary(tuple(features))
+    mode = st.radio('Mode de saisie', ['Observation individuelle', 'Fichier CSV'], horizontal=True,
+                    key='studio_mode')
+    if mode == 'Fichier CSV':
+        batch_panel(name, model, threshold, summary)
+        return
+    st.caption('Le formulaire est initialisé avec la première observation complète du train.')
     settings, result = st.columns([1.7, 1])
     with settings.container():
         st.subheader('Mesures de la cellule-jour')

@@ -8,3 +8,6 @@ borderColor = "#303953"
 showWidgetBorder = true
 baseRadius = "medium"
 chartCategoricalColors = ["#22D3EE", "#FF654D", "#A99DFF", "#B9F46B"]
+
+[server]
+maxUploadSize = 1
