@@ -16,7 +16,8 @@ Ouvrir l’URL locale affichée dans le terminal. Depuis un environnement Python
 | Data Explorer | Filtrer années, mois, zones, classes et plage météo. Examiner les distributions, les valeurs manquantes et les corrélations, puis exporter la sélection. |
 | Geo Intelligence | Ajuster la période, survoler une cellule, zoomer et consulter ses coordonnées et ses effectifs dans le tableau. |
 | Model Arena | Classer les modèles par métrique sur 2024 et examiner confusion, courbes et réglages. |
-| Prediction Studio | Sélectionner le pipeline, renseigner les groupes de mesures et lire la classe et la probabilité après soumission. |
+| Prediction Studio | Sélectionner le pipeline, renseigner les groupes de mesures et lire la classe, la probabilité et le niveau d’alerte après soumission. Charger un CSV de 24 colonnes pour classer des observations en lot et télécharger les prédictions. |
+| Explainability | Choisir un pipeline, consulter le beeswarm et l’importance moyenne SHAP sur la validation 2024, puis décomposer la dernière observation soumise au studio. |
 | Scientific Insights | Consulter le protocole, les contrôles du CSV et la comparaison des températures et humidités avec ou sans appariement mensuel. |
 
 ## Données et limites
@@ -27,7 +28,7 @@ Conserver le CSV brut dans Dataset/, le protocole dans config/ et les lots versi
 
 ## Organisation
 
-L’entrée Streamlit est src/app.py. Le module src/ui/shell.py porte la navigation, atlas.css les styles, geography.py la carte, pages.py la synthèse et le protocole, model_pages.py les espaces modèles et prédiction. Les données et les artefacts sont chargés par services.py. Les distributions et corrélations sont partagées avec la démo autonome dans src/eda_view.py.
+L’entrée Streamlit est src/app.py. Le module src/ui/shell.py porte la navigation, atlas.css les styles, geography.py la carte, pages.py la synthèse et le protocole, model_pages.py les espaces modèles et prédiction, prediction_enhanced.py l’import CSV et l’export du studio, shap_page.py l’espace Explicabilité. Les données et les artefacts sont chargés par services.py. Les niveaux d’alerte et le back-end SHAP résident dans src/explainability/. Les distributions et corrélations sont partagées avec la démo autonome dans src/eda_view.py.
 
 [Ordinateur](interface-bureau.png) · [Tablette](interface-tablette.png) · [Mobile](interface-mobile.png)
 
@@ -37,15 +38,21 @@ Les sélections de Data Explorer sont conservées pendant la navigation. « Réi
 
 Model Arena distingue les six classifieurs demandés et les deux supplémentaires. Pour GaussianNB, le classement et les courbes utilisent le benchmark final qui reproduit run_01 (F1 0,173585). Le benchmark antérieur obtenait 0,176681. L’accuracy de Zero-R atteint 92,37 % en classant toutes les lignes en 0, avec 643 détections manquées.
 
-Dans le studio, les libellés précisent les unités établies ou signalent leur incertitude. Une incompatibilité de version ou de schéma interrompt le chargement. Les contrôles sur les entrées précèdent la classification. Les probabilités concernent la classe de l’observation dans cet échantillon.
+Dans le studio, les libellés précisent les unités établies ou signalent leur incertitude. Une incompatibilité de version ou de schéma interrompt le chargement. Les contrôles sur les entrées précèdent la classification. Les probabilités concernent la classe de l’observation dans cet échantillon. Sous la jauge, un badge indique le niveau d’alerte (Faible, Modéré, Élevé, Critique) positionné sur les seuils du protocole 0,20 / 0,35 / 0,50. Le score reste une probabilité de classe rétrospective, pas un risque futur.
+
+Le studio avancé accepte un CSV dont les 24 colonnes du protocole sont présentes dans l’ordre exact ; les colonnes manquantes, l’ordre invalide, les valeurs non numériques ou physiquement incohérentes sont refusées avec le nom de la colonne concernée. Les valeurs manquantes sont imputées par le pipeline comme à l’entraînement. Le tableau exporté ajoute `score`, `prediction` et `alerte`.
+
+Dans l’espace Explainability, les contributions SHAP sont additives (base + contributions = score, contrôlé par les tests). Le beeswarm et la barre portent sur 25 à 100 observations de la validation 2024 ; le waterfall explique la dernière observation soumise au studio. La lecture est descriptive : les variables corrélées partagent le signal et aucune attribution causale n’est revendiquée.
 
 ## Recette avant la soutenance
 
-1. Lancer l’application sur le poste de présentation. Ouvrir les six espaces, puis répéter en écran étroit. Vérifier que les tableaux restent accessibles et que le formulaire peut être soumis.
+1. Lancer l’application sur le poste de présentation. Ouvrir les sept espaces, puis répéter en écran étroit. Vérifier que les tableaux restent accessibles et que le formulaire peut être soumis.
 2. Dans Exploration, sélectionner une année et un mois, vérifier l’effectif et exporter. Réinitialiser les filtres et comparer au total du train.
 3. Dans Carte, retirer tous les mois, puis en sélectionner un. Vérifier le message pour une sélection vide et le retour des cellules sur la carte.
-4. Dans Modèles, comparer les F1 sur 2024 au seuil 0,50, puis afficher la matrice et les courbes du SVM. Dans Prédiction, vérifier le seuil 0,20 avant et après avoir soumis l’exemple.
-5. Dans Méthodologie, comparer l’appariement annuel et mensuel. Les graphiques doivent suivre la sélection. Noter le navigateur et la largeur d’écran effectivement utilisés.
+4. Dans Modèles, comparer les F1 sur 2024 au seuil 0,50, puis afficher la matrice et les courbes du SVM. Dans Prédiction, vérifier le seuil 0,20 avant et après avoir soumis l’exemple, puis le badge de niveau d’alerte sous la jauge.
+5. Dans le studio avancé, télécharger le modèle de colonnes, charger un CSV de dix observations complètes, vérifier les quatre métriques d’alerte et relire l’export téléchargé avec un tableur. Charger ensuite un fichier volontairement tronqué et vérifier le message citant la colonne manquante.
+6. Dans Explainability, laisser le beeswarm et la barre se calculer (SVM : première fois plus longue, puis cachée), soumettre une observation dans Prédiction et vérifier le waterfall dont la légende réconcilie base, contributions et score.
+7. Dans Méthodologie, comparer l’appariement annuel et mensuel. Les graphiques doivent suivre la sélection. Noter le navigateur et la largeur d’écran effectivement utilisés.
 
 ## Recette de réévaluation
 
