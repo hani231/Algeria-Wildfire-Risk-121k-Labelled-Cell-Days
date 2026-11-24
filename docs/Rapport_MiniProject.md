@@ -2,7 +2,7 @@
 title: "Wildfire Atlas"
 subtitle: "Classification rétrospective des détections en Algérie et dans les cellules voisines"
 author: "Mini-projet de fouille de données · Contribution d’intégration SIAD03"
-date: "21 novembre 2026"
+date: "24 novembre 2026"
 geometry: "a4paper,margin=21mm"
 fontsize: 11pt
 colorlinks: true
@@ -67,6 +67,22 @@ Dans les deux analyses, les douze années vont dans le sens d’une température
 Le train couvre 2012–2023. Chaque pli interne valide une année entière de 2019 à 2023 et n’apprend que sur les années antérieures. Cette adaptation du K-Fold demandé empêche l’apprentissage sur des années futures. Son acceptation pédagogique reste à confirmer. Le choix interne maximise le F1 moyen de la classe 1 à seuil 0,50. Imputation médiane, standardisation et pondérations sont apprises sur le sous-ensemble d’apprentissage de chaque pli.
 
 La validation 2024 compare ensuite les six modèles et les seuils 0,20, 0,35 et 0,50 par F1. À égalité, priorité au seuil le plus élevé puis à l’ordre alphabétique. La règle et les candidats étaient fixés avant cette comparaison. L’examen historique répété de 2024 limite l’indépendance de toute estimation sur cette saison. L’artefact gagnant et son seuil ont été gelés dans Git avant l’ouverture de 2025. Aucun réajustement sur 2012–2024.
+
+\newpage
+
+# Qu’apprend-on avec un K-Fold classique ?
+
+Après le gel, nous avons exécuté GridSearchCV avec KFold à cinq plis mélangés (graine 42) sur les 104 979 lignes du train. Les six grilles, budgets d’apprentissage, pipelines et seuil de 0,50 sont ceux du benchmark. Chaque ligne participe une fois à la validation mélangée. Pour comparer les découpages, le tableau reprend pour chaque modèle les paramètres déjà gelés. Les deux premières colonnes donnent les F1 moyens sur les parties apprentissage et validation du KFold. La dernière reprend les validations annuelles du protocole principal.
+
+{{KFOLD}}
+
+Pour la forêt, le F1 en validation mélangée atteint 0,563 contre 0,430 en validation chronologique. L’écart va dans l’autre sens pour le SVM. Les plis mélangés partagent des années entre apprentissage et validation, y compris des mesures postérieures aux observations classées. Ils estiment la classification de lignes tirées de ce même ensemble de saisons. Le protocole principal mesure le transfert à une année ultérieure. La composition des cohortes et parfois les tailles d’apprentissage changent aussi. Les différences observées ne permettent pas d’isoler un biais unique.
+
+L’écart apprentissage–validation de K-NN (environ 0,073) suggère une sensibilité aux observations d’apprentissage. GaussianNB obtient environ 0,507 des deux côtés. Des scores proches ne prouvent ni l’absence de sous-apprentissage ni la généralisation à un autre climat. Aucune décision de modèle ou de seuil ne découle de ce diagnostic.
+
+# Expérience secondaire K-NN et ACP
+
+Les deux notebooks du lot secondaire utilisent 25 entrées, dont la normale NDVI présente dans leurs listes locales. Le benchmark utilise 24 entrées. Dans un environnement distinct avec scikit-learn 1.9.0, la chaîne imputation, échelle, ACP à 95 % et K-NN avec 2 001 voisins a été rechargée. Ses 12 composantes donnent une Average Precision de 0,105225 sur les 8 423 lignes de 2024. Les notebooks reproduisent 0,1046 sans ACP et 0,1049 avec la rétention de 90 %. L’AP mesure ici la somme des précisions pondérées par les gains de rappel. Plusieurs réglages ont été examinés sur 2024. Le léger écart observé demande confirmation. Le modèle officiel, son schéma et sa décision restent ceux gelés avant 2025.
 
 \newpage
 
@@ -146,7 +162,7 @@ Sur 8 467 lignes, le résultat final comprend **900 vrais positifs, 222 faux né
 
 ![Wildfire Atlas. La carte regroupe les cellules-jours observées par cellule.](docs/interface-bureau.png){width=78%}
 
-Command Center synthétise la couverture. Data Explorer partage les filtres entre statistiques descriptives, données manquantes, histogramme/KDE, fréquences, corrélations et export. Geo Intelligence contrôle les coordonnées. Model Arena rattache scores, courbes et matrices à leurs fichiers d’expérience. Prediction Studio valide le schéma et les mesures avant de charger le pipeline sauvegardé. Scientific Insights présente le protocole et les tests appariés.
+Command Center synthétise la couverture. Data Explorer partage les filtres entre statistiques descriptives, données manquantes, histogramme/KDE, fréquences, corrélations et export. Geo Intelligence contrôle les coordonnées. Model Arena rattache scores, courbes et matrices à leurs fichiers d’expérience. Prediction Studio conserve les mesures pendant la navigation et affiche le résultat correspondant au modèle, au seuil et aux entrées soumis. Model Arena permet de consulter séparément la décision publiée sur 2025. Scientific Insights présente le protocole et les tests appariés.
 
 Le dépôt collectif apporte les observations, le cadrage et un arbre historique. Le lot SIAD03 comprend audit, nettoyage, statistiques, EDA, Zero-R/NB et interface. La branche d’intégration SIAD03 ajoute les recherches K-NN, SVM, forêt et arbre compatible, le gel du modèle et ce rapport, avec assistance de développement. Le plan initial décrit une répartition prévue. L’historique Git établit les livraisons effectives.
 

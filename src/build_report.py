@@ -82,7 +82,12 @@ def build():
     ax.set(xticks=[0,1], yticks=[0,1], xlabel='Classe prédite', ylabel='Classe observée')
     fig.savefig(docs/'confusion_2025.png', dpi=160)
     plt.close(fig)
+    diagnostic = pd.read_csv(ROOT/'results/post_freeze/kfold_train/folds.csv')
+    paired = diagnostic.groupby('model')[['f1_fit','f1_check']].mean().reindex(metrics.index)
+    paired['Chronologique'] = metrics.cv_f1
+    paired = paired.rename(columns={'f1_fit':'KFold apprentissage', 'f1_check':'KFold validation'})
     tables = {
+        'KFOLD': paired.rename_axis('Modèle').reset_index(),
         'PLIS': pd.DataFrame(folds), 'TAILLES': summary,
         'SCORES': core[['Modèle',*columns]].rename(columns=columns),
         'COUTS': core[['Modèle','cv_f1','search_seconds','fit_seconds','predict_seconds']].rename(columns={
