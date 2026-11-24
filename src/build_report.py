@@ -1,6 +1,7 @@
 """Compiler le rapport éditable et ses graphiques à partir des résultats versionnés."""
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import tempfile
@@ -101,6 +102,9 @@ def build():
         'TEST': pd.DataFrame([{label:final[key] for key,label in columns.items()}]),
     }
     source = (docs/'Rapport_MiniProject.md').read_text()
+    for image in re.findall(r'!\[[^\]]*\]\(([^)]+)\)', source):
+        if not (ROOT / image).is_file():
+            raise FileNotFoundError(f'Illustration absente du rapport : {image}')
     engine = os.environ.get('PANDOC_PDF_ENGINE', 'xelatex')
     for key, frame in tables.items():
         source = source.replace('{{'+key+'}}', frame.to_html(index=False, float_format=lambda value: f'{value:.3f}'.replace('.', ','))
