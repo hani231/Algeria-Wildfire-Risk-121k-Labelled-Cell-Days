@@ -28,3 +28,30 @@ Imputation, échelle et ACP sont ajustées sur le train. Le code transforme auss
 ## Décision de travail
 
 Traiter d’abord les preuves ML et le cas K-Fold sur GaussianNB, puis la persistance du studio et sa recette. Régénérer le PDF et compléter le bilan à partir des vérifications effectivement exécutées. La décision SVM du commit ece0598 et son évaluation 2025 restent les références.
+
+## Bilan après exécution
+
+Le diagnostic a finalement pu couvrir les six grilles dans le budget de calcul. Le lot sous results/post_freeze/kfold_train est indépendant des artefacts officiels. KFold utilise les 104 979 lignes de 2012–2023, cinq plis mélangés, graine 42 et les mêmes plafonds d’apprentissage que le benchmark. Aucune recherche de seuil et aucun refit. Les tests vérifient le meilleur réglage publié de chaque recherche chronologique, ses scores par pli et les paramètres de l’estimateur rechargé.
+
+| Critère | Avant → après | Preuve supplémentaire et limite |
+|---|---|---|
+| 1.1 | Conforme → conforme, périmètre précisé | 24 entrées officielles comparées aux 25 des deux notebooks. Le schéma expérimental ne rejoint pas le studio. |
+| 1.2 | Conforme → conforme, reproduction vérifiée | Commande src.statistical_analysis exécutée dans un dossier temporaire. Les sept sorties des deux appariements ont été comparées octet par octet. Effets principaux +3,077 °C et −10,107 points, p ajustée 0,0009765625. |
+| 1.3 | Conforme → conforme, lot secondaire identifié | Les deux notebooks ont été rejoués dans une copie isolée avec scikit-learn 1.9.0. Relecture indépendante des quatre objets publiés : AP 0,105224847886 sur 8 423 observations de validation. |
+| 1.4 | Partiel → KFold classique exécuté en complément | src/kfold_diagnostic.py, tests/test_kfold_diagnostic.py et six CSV complets. L’acceptation de la sélection officielle chronologique dépend du professeur. |
+| 1.5 | Conforme → conforme, comparabilité explicitée | Pour GaussianNB, F1 moyen de validation 0,507 en KFold et 0,410 en chronologique au même réglage. Pour le SVM, 0,301 et 0,412. Les populations évaluées diffèrent. Tableau complet en page 5 du rapport. |
+| 2.1 | Conforme Linux → vérifié dans un venv neuf | Installation depuis requirements-dev.txt, navigation des six espaces et classification en Chromium. Recette sur le poste universitaire ouverte. |
+| 2.2 | Conforme → conforme, cas limite corrigé | Deux points communs pouvaient donner une corrélation parfaite. Les effectifs communs, constantes et paires indisponibles sont désormais traités explicitement. tests/test_eda.py. |
+| 2.3 | Partiel → conforme aux parcours testés | tests/test_ui_app.py vérifie le brouillon conservé, la dernière soumission et l’invalidation après modification. Le panneau final de Model Arena lit seulement le JSON publié. |
+| 3.1 | Conforme → conforme localement | Suite initiale 98 tests, suite finale 109 tests ; installation isolée Python 3.12. L’état de GitHub Actions est non vérifié, API bloquée. |
+| 3.2 | Partiel équipe → traçabilité du lot renforcée | Commits par sujet. La contribution K-NN/ACP demeure attribuée à son auteur. La réévaluation individuelle dépend des éléments du professeur. |
+| 4.1 | Partiel → PDF régénéré et contrôlé | Rapport de 11 pages, tableaux KFold générés depuis les CSV, interprétation ACP et contrôle des pages rendues. Relecture de l’équipe avant transmission. |
+| 4.2 | Partiel → reproduction documentée | Commande KFold, coexistence des environnements et guide illustré à trois largeurs. Les codes non confirmés restent à vérifier avec leurs titulaires. |
+
+### Reproduire le contrôle secondaire
+
+Dans une copie de travail temporaire, créer un venv Python 3.12 distinct et y installer scikit-learn==1.9.0, pandas==2.2.3, matplotlib, nbclient, nbformat et ipykernel. Lancer un noyau de cet environnement depuis notebooks/, puis exécuter 04_knn.ipynb et acp.ipynb. Le second écrit quatre fichiers sous models/, d’où l’intérêt de la copie temporaire. Pour vérifier les objets déjà publiés indépendamment du notebook, charger imputer, scaler, pca_95 et knn_pca_95 dans cet ordre. Retenir les lignes val du CSV nettoyé, ordonner les colonnes selon imputer.feature_names_in_, appliquer les trois transform puis predict_proba et average_precision_score. Les modèles secondaires n’ont été ni adoptés ni optimisés sur 2025.
+
+### Portée pour la notation
+
+La marge arithmétique jusqu’à 18 est de 4,8 points. ML et UI réunissent 5,3 points précédemment non attribués, mais les catégories ne détaillent pas la cause de chaque perte. Les preuves les plus substantielles concernent 1.4, 1.5 et 2.3. Les vérifications supplémentaires consolident surtout les autres lignes. Sans retour détaillé du professeur, convertir ces changements en gain numérique serait spéculatif.

@@ -46,3 +46,11 @@ Dans le studio, les libellés précisent les unités établies ou signalent leur
 3. Dans Carte, retirer tous les mois, puis en sélectionner un. Vérifier le message pour une sélection vide et le retour des cellules sur la carte.
 4. Dans Modèles, comparer les F1 sur 2024 au seuil 0,50, puis afficher la matrice et les courbes du SVM. Dans Prédiction, vérifier le seuil 0,20 avant et après avoir soumis l’exemple.
 5. Dans Méthodologie, comparer l’appariement annuel et mensuel. Les graphiques doivent suivre la sélection. Noter le navigateur et la largeur d’écran effectivement utilisés.
+
+## Recette de réévaluation
+
+Sur un même navigateur, choisir le SVM dans Prediction Studio, modifier le jour de l’année, calculer la classe puis visiter une autre page et revenir. Les champs, le modèle et la classification soumise doivent être conservés. Après modification d’une valeur, relancer « Prédire » pour obtenir le résultat de la nouvelle observation. Ces données sont propres à la session Streamlit.
+
+Dans Model Arena, « Comparaison 2024 » présente les modèles au seuil commun de 0,50. « Test final 2025 » lit le résultat enregistré du SVM à 0,20. Les deux taux répondent à des questions différentes : combien de positifs sont retrouvés et combien d’alertes correspondent à un positif. Dans Data Explorer, chaque coefficient de Spearman requiert au moins trois observations communes et deux variables non constantes.
+
+Captures réelles du panneau de test publié, sur trois largeurs : [ordinateur](reevaluation/arena-bureau.png), [tablette](reevaluation/arena-tablette.png), [téléphone](reevaluation/arena-mobile.png).
