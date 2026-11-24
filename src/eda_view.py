@@ -147,9 +147,12 @@ def render_eda(df, standalone=True):
         elif len(filtered) < 3:
             st.info('Trop peu de lignes pour afficher une corrélation utile.')
         else:
-            corr = filtered[selected].corr(method='spearman')
-            if corr.notna().sum().sum() == 0:
-                st.info('Corrélations indéfinies : valeurs constantes ou manquantes.')
+            corr = filtered[selected].corr(method='spearman', min_periods=3)
+            off_diagonal = corr.mask(pd.DataFrame(
+                {key: corr.index == key for key in selected}, index=corr.index))
+            if not off_diagonal.notna().any().any():
+                st.info('Aucune paire de variables distinctes avec trois observations communes '
+                        'et deux mesures non constantes.')
             else:
                 pairs = corr.rename_axis('Variable').reset_index().melt(
                     id_vars='Variable', var_name='Comparaison', value_name='Coefficient')
@@ -162,4 +165,6 @@ def render_eda(df, standalone=True):
                     color=alt.Color('Coefficient:Q', scale=alt.Scale(domain=[-1, 1], scheme='redblue')),
                     tooltip=['Variable', 'Comparaison', 'Paires complètes:Q', alt.Tooltip('Coefficient:Q', format='.3f')])
                 st.altair_chart(heatmap, width='stretch')
-        st.caption('Une corrélation décrit une association, sans démontrer une cause.')
+        st.caption('Chaque coefficient utilise les lignes complètes de sa paire. '
+                   'Le survol indique cet effectif. Une case vide correspond à moins de trois '
+                   'mesures communes ou à une variable constante. Une association ne démontre pas une cause.')

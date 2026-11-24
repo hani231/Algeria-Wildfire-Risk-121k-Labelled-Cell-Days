@@ -52,3 +52,17 @@ render_eda(df)
     app.multiselect(key='eda_months').set_value([]).run()
     assert not app.exception
     assert any('Aucune observation' in x.value for x in app.info)
+
+
+def test_sparse_pair_does_not_display_perfect_correlation():
+    code = """
+import pandas as pd
+from src.eda_view import render_eda
+df = pd.DataFrame(dict(split=['train']*4, year=[2012]*4, date=['2012-06-01']*4,
+                       label=[0,0,1,1], cell_id=['a','b','c','d'],
+                       temp_max=[10,20,30,None], rh_mean=[None,30,40,50]))
+render_eda(df)
+"""
+    app = AppTest.from_string(code).run()
+    assert not app.exception
+    assert any('Aucune paire de variables distinctes' in item.value for item in app.info)
