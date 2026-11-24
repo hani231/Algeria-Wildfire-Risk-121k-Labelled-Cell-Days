@@ -90,7 +90,7 @@ def prediction():
     if not names:
         st.warning('Aucun pipeline compatible disponible.')
         return
-    name = st.selectbox('Pipeline', names)
+    name = st.selectbox('Pipeline', names, key='studio_model')
     final = decision()
     threshold = final['threshold'] if final['model'] == name else .5
     st.caption(f"Seuil appliqué à cette observation : {threshold:.2f}. "
@@ -99,7 +99,7 @@ def prediction():
     features = list(model.feature_names_in_)
     summary = input_summary(tuple(features))
     settings, result = st.columns([1.7, 1])
-    with settings.form('predict'):
+    with settings.container():
         st.subheader('Mesures de la cellule-jour')
         values = {}
         groups = {'Météo du jour': features[:9], 'Historique météo': features[9:14],
@@ -114,23 +114,30 @@ def prediction():
                     if key in ('doy','ndvi_stale_days','days_since_rain_1mm'):
                         params = dict(min_value=int(limits.minimum), max_value=int(limits.maximum),
                                       value=int(limits.initial), step=1)
-                    values[key] = columns[i % 2].number_input(measure_label(key), **params)
-        submitted = st.form_submit_button('Prédire', type='primary')
+                    values[key] = columns[i % 2].number_input(measure_label(key), key='studio_input_'+key, **params)
+        submitted = st.button('Prédire', type='primary', icon=':material/play_arrow:')
     with result.container(border=True):
         st.subheader('Lecture du résultat')
-        if not submitted:
-            st.caption(f'{name} · {len(features)} variables')
-            st.info('Ajustez les mesures puis lancez la classification.')
+        signature = (name, threshold, tuple(values.items()))
+        if submitted:
+            try:
+                label, score = classify(model, values, threshold)
+            except ValueError as error:
+                st.session_state.pop('last_prediction', None)
+                st.error(str(error))
+                return
+            st.session_state.last_prediction = (signature, label, score)
+        saved = st.session_state.get('last_prediction')
+        if saved is None or saved[0] != signature:
+            message = ('Les mesures ou le modèle ont changé. Relancez la classification.'
+                       if saved else 'Ajustez les mesures puis lancez la classification.')
+            st.info(message)
             return
-        try:
-            label, score = classify(model, values, threshold)
-            st.caption(f'Seuil de classification : {threshold:.2f}')
-        except ValueError as error:
-            st.error(str(error))
-            return
+        _, label, score = saved
+        st.caption(f'{name} · {len(features)} mesures · seuil {threshold:.2f}')
         st.metric('Classe estimée', '1 · Avec détection' if label else '0 · Sans détection')
         if score is not None:
             st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
-        st.caption('Classification rétrospective. La calibration et l’échantillonnage limitent son interprétation comme risque territorial.')
+        st.caption('Le score estime la classe d’une cellule-jour dans cet échantillon. Les jours sans détection ont été sélectionnés et la météo inclut la journée observée. Un score de classe ne donne donc pas le risque futur sur le territoire.')
         with st.expander('Mesures utilisées'):
             st.table(pd.Series(values, name='Valeur'))

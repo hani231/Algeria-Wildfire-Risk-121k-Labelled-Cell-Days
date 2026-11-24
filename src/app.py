@@ -15,7 +15,7 @@ pages = {'Accueil': overview, 'Exploration': explore, 'Carte': geography,
          'Modèles': models, 'Prédiction': prediction, 'Méthodologie': methodology}
 # Conserver les filtres des espaces momentanément démontés par Streamlit.
 for key in list(st.session_state):
-    if key.startswith(('eda_', 'range_', 'map_')):
+    if key.startswith(('eda_', 'range_', 'map_', 'studio_')):
         st.session_state[key] = st.session_state[key]
 page = navigation()
 heading(page)
