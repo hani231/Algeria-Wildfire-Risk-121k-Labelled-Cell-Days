@@ -2,11 +2,11 @@ critere,points_max,intitule,etat,preuve,limite
 1.1,2,Données et prétraitement,Exécuté et vérifié,src/preprocessing.py et notebooks/02_preprocessing_encoding.ipynb et tests/test_cleaning.py,24 variables numériques retenues et aucune catégorie à encoder
 1.2,3,EDA et deux analyses,Exécuté et vérifié,results/audit_siad03/statistiques_principal.csv et statistiques_sensibilite_mois.csv et rapport,Figures annuelles dans le PDF ; indépendance annuelle incertaine
 1.3,1,Six classifieurs,Exécuté et vérifié,results/benchmark_final/manifest.json et tests/test_final_benchmark.py,K-NN et SVM limités aux tailles documentées
-1.4,2,Recherche et cinq plis,Exécuté et vérifié,results/benchmark_final/*_cv.csv et results/post_freeze/parameters,Accord pédagogique sur adaptation chronologique à confirmer
-1.5,2,Métriques et courbes,Exécuté et vérifié,results/benchmark_final/metrics.csv et courbes_2024.png et results/test_final/result.json,2025 évalué pour la seule règle gelée
+1.4,2,Recherche et cinq plis,Exécuté et vérifié,results/benchmark_final/*_cv.csv et results/post_freeze/parameters et kfold_train,Accord pédagogique sur adaptation chronologique à confirmer
+1.5,2,Métriques et courbes,Exécuté et vérifié,results/benchmark_final/metrics.csv et courbes_2024.png et results/test_final/result.json et results/post_freeze/alerts_2024,2025 évalué pour la seule règle gelée
 2.1,1.5,Application locale,Exécuté et vérifié,src/app.py et tests/test_ui_app.py,Recette sur le poste universitaire à exécuter selon docs/INTERFACE.md
 2.2,1,EDA interactive,Exécuté et vérifié,src/eda_view.py et tests/test_eda.py,Proportions propres au plan de collecte
-2.3,1.5,Classification interactive,Exécuté et vérifié,src/ui/model_pages.py et tests/test_ui_quality.py,Probabilités de classe sur échantillon
+2.3,1.5,Classification interactive,Exécuté et vérifié,src/ui/model_pages.py et tests/test_ui_quality.py et tests/test_prediction_batch.py,Probabilités de classe sur échantillon
 3.1,1,Structure et dépendances,Implémenté,data/raw/README.md et notebooks/ et .github/workflows/tests.yml,CI hébergée à vérifier après publication
 3.2,2,Contributions Git,Traçable,Historique des PR et commits du lot final SIAD03,Attribution et note individuelles réservées au professeur
 4.1,1.5,Rapport scientifique,Exécuté et vérifié,docs/Rapport_MiniProject.pdf et sa source .md et src/build_report.py,Relecture collective avant rendu

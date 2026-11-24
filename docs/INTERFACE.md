@@ -54,3 +54,12 @@ Sur un même navigateur, choisir le SVM dans Prediction Studio, modifier le jour
 Dans Model Arena, « Comparaison 2024 » présente les modèles au seuil commun de 0,50. « Test final 2025 » lit le résultat enregistré du SVM à 0,20. Les deux taux répondent à des questions différentes : combien de positifs sont retrouvés et combien d’alertes correspondent à un positif. Dans Data Explorer, chaque coefficient de Spearman requiert au moins trois observations communes et deux variables non constantes.
 
 Captures réelles du panneau de test publié, sur trois largeurs : [ordinateur](reevaluation/arena-bureau.png), [tablette](reevaluation/arena-tablette.png), [téléphone](reevaluation/arena-mobile.png).
+
+## Importer plusieurs cellules-jours
+
+1. Ouvrir Prediction Studio, choisir un pipeline, puis « Fichier CSV ». Le seuil affiché s’applique à chaque ligne.
+2. Télécharger l’exemple. Conserver les 24 noms de colonnes, dans l’ordre souhaité. Utiliser les unités du formulaire, un point pour les décimales et la virgule entre champs. Chaque observation doit être complète et dans les plages du train affichées par le formulaire individuel. [Dictionnaire des unités](dictionnaire_colonnes.md)
+3. Importer le fichier UTF-8 (1 Mio, 1 000 observations au maximum). Une erreur de schéma, de plage ou de cohérence interrompt le lot entier. Corriger le fichier avant de le soumettre à nouveau.
+4. Vérifier le nombre d’alertes et exporter. La colonne `observation` numérote les lignes du fichier à partir de 1. L’export conserve les mesures, le nom du pipeline, son seuil, la classe et le score. L’inférence s’exécute en mémoire avec le pipeline sauvegardé.
+
+Dans Model Arena, « Alertes du SVM en 2024 » présente les trois seuils au niveau de la saison et les erreurs mensuelles au seuil retenu. Dans le tableau de fiabilité, comparer le score moyen à la fraction positive du même intervalle et lire l’effectif avant d’interpréter l’écart.

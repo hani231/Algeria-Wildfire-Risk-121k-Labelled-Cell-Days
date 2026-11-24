@@ -2,7 +2,7 @@
 
 Wildfire Atlas compare six classifieurs supervisés sur des cellules-jours et permet d’explorer leurs résultats dans Streamlit. Le SVM sélectionné retrouve 900 des 1 122 détections du test 2025. Il produit également 4 814 faux positifs. Les mesures de la journée et le choix des négatifs limitent l’interprétation à la classification rétrospective dans cet échantillon.
 
-[Rapport collectif PDF](docs/Rapport_MiniProject.pdf) · [Source éditable](docs/Rapport_MiniProject.md) · [Guide de l’interface](docs/INTERFACE.md) · [Conformité au cahier des charges](docs/MATRICE_CONFORMITE.csv)
+[Rapport collectif PDF](docs/Rapport_MiniProject.pdf) · [Source éditable](docs/Rapport_MiniProject.md) · [Guide de l’interface](docs/INTERFACE.md) · [Conformité au cahier des charges](docs/MATRICE_CONFORMITE.csv) · [Comparaison avec le projet Firewall](docs/COMPARAISON_FIREWALL_17.md)
 
 ## Lancement local
 
@@ -126,3 +126,13 @@ python -m src.kfold_diagnostic --output results/local_runs/diagnostic_kfold
 ```
 
 L’auteur du lot secondaire a ajouté les notebooks 04_knn et acp, le résumé K-NN et quatre objets sérialisés avec scikit-learn 1.9.0. Ces notebooks emploient 25 entrées dont ndvi_normal. Leur reproduction se fait dans un environnement distinct de celui de Wildfire Atlas (1.8.0). Avec 12 composantes et 2 001 voisins, leur Average Precision sur 2024 est 0,105225. Le registre de l’application continue de charger les pipelines du benchmark publié. [Audit des douze critères, vérifications et proposition au responsable](docs/AUDIT_REEVALUATION.md) · [Rapport collectif](docs/Rapport_MiniProject.pdf)
+
+## Reproduire le diagnostic des alertes
+
+Depuis la racine, la commande suivante lit les scores SVM de validation déjà publiés et écrit trois CSV dans un dossier neuf. Elle reproduit les effectifs aux trois seuils du protocole, les erreurs mensuelles au seuil gelé et la fiabilité par tranche de score.
+
+```bash
+python -m src.validation_alerts --output results/local_runs/alertes_2024
+```
+
+Dans **Model Arena → Alertes du SVM en 2024**, comparer les lignes 0,20 et 0,35. Les F1 sont proches, mais le seuil bas produit 2 216 fausses alertes supplémentaires pour 216 détections supplémentaires retrouvées. Dans **Prediction Studio → Fichier CSV**, télécharger l’exemple, saisir jusqu’à 1 000 cellules-jours puis exporter les classes et scores. [Mode d’emploi et unités](docs/INTERFACE.md)
