@@ -7,12 +7,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.ui.pages import overview, explore, statistics, methodology
 from src.ui.geography import geography
 from src.ui.model_pages import models, prediction
+from src.ui.shap_page import explainability
 
 from src.ui.shell import heading, navigation
 
 st.set_page_config(page_title='Wildfire Atlas · Algérie', page_icon='🌐', layout='wide')
 pages = {'Accueil': overview, 'Exploration': explore, 'Carte': geography,
-         'Modèles': models, 'Prédiction': prediction, 'Méthodologie': methodology}
+         'Modèles': models, 'Prédiction': prediction, 'Explicabilité': explainability,
+         'Méthodologie': methodology}
 # Conserver les filtres des espaces momentanément démontés par Streamlit.
 for key in list(st.session_state):
     if key.startswith(('eda_', 'range_', 'map_', 'studio_')):

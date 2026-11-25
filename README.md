@@ -100,6 +100,7 @@ Le brut versionné sous `Dataset/` est la source commune. Il remplit le rôle du
 | results/benchmark_final/, results/test_final/ | Lots actifs des six modèles et décision gelée |
 | models/, results/protocole_propose.json | Pipelines et paramètres historiques conservés pour traçabilité |
 | SIAD03 | Audit, EDA, statistiques, Zero-R/NB, interface, puis intégration du benchmark des six modèles, tests et rapport avec assistance de développement |
+| IASD17 | Niveaux d’alerte multi-seuils et import/export CSV dans le Prediction Studio, page Explicabilité SHAP (beeswarm, barre, waterfall) sur les huit pipelines, 60 tests et documentation — [fiche de contribution](docs/CONTRIBUTION_IASD17.md) |
 | Responsable du prétraitement (code à confirmer) | Cadrage du dépôt et travaux initiaux de préparation selon l’historique et le plan |
 | Responsable de l’intégration (code à confirmer) | Arbre historique et résultats associés. L’arbre du benchmark commun a été réentraîné dans le lot SIAD03 |
 
