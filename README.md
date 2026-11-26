@@ -2,7 +2,7 @@
 
 Wildfire Atlas compare six classifieurs supervisés sur des cellules-jours et permet d’explorer leurs résultats dans Streamlit. Le SVM sélectionné retrouve 900 des 1 122 détections du test 2025. Il produit également 4 814 faux positifs. Les mesures de la journée et le choix des négatifs limitent l’interprétation à la classification rétrospective dans cet échantillon.
 
-[Rapport collectif PDF](docs/Rapport_MiniProject.pdf) · [Source éditable](docs/Rapport_MiniProject.md) · [Guide de l’interface](docs/INTERFACE.md) · [Conformité au cahier des charges](docs/MATRICE_CONFORMITE.csv)
+[Rapport collectif PDF](docs/Rapport_MiniProject.pdf) · [Source éditable](docs/Rapport_MiniProject.md) · [Guide de l’interface](docs/INTERFACE.md) · [Conformité au cahier des charges](docs/MATRICE_CONFORMITE.csv) · [Comparaison avec le projet Firewall](docs/COMPARAISON_FIREWALL_17.md)
 
 ## Lancement local
 
@@ -13,9 +13,17 @@ git clone https://github.com/hani231/Algeria-Wildfire-Risk-121k-Labelled-Cell-Da
 cd Algeria-Wildfire-Risk-121k-Labelled-Cell-Days
 ```
 
-Depuis le clone contenant la branche du benchmark final, utiliser Python 3.12. Sous PowerShell :
+Pour examiner la réévaluation avant son intégration dans le dépôt collectif, sélectionner la branche de la contribution depuis ce clone propre.
+
+```bash
+git fetch https://github.com/lyesaitikhlef/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days.git refs/heads/improvement/siad03-final-reevaluation
+git switch --detach FETCH_HEAD
+```
+
+L’application utilise Python 3.12, scikit-learn 1.8.0, Streamlit 1.51.0 et SHAP 0.54.1. Sous PowerShell :
 
 ```powershell
+$env:PYTHONUTF8 = "1"
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m pytest -q
@@ -33,6 +41,10 @@ python -m streamlit run src/app.py
 ```
 
 Ouvrir l’adresse locale indiquée par Streamlit. Les huit pipelines du studio sont fournis. L’application charge les artefacts existants, contrôle le schéma et les unités puis classe les mesures soumises. Le catalogue, les prédictions, les matrices et les courbes utilisent un registre commun. Le fond cartographique est local.
+
+![Command Center de Wildfire Atlas, carte des cellules-jours et synthèse des observations](docs/interface-bureau.png)
+
+Pour la soutenance, suivre une cellule-jour de la saisie jusqu’à sa classe dans **Prediction Studio**, puis ouvrir **Explainability** pour comprendre son score. **Model Arena** permet de discuter les fausses alertes à partir des observations de validation. [Guide des sept espaces](docs/INTERFACE.md) · [Audit final et checklist](docs/AUDIT_FINAL_REEVALUATION.md)
 
 ## Données et protocole
 
@@ -59,24 +71,23 @@ La configuration active est `config/protocole.json`. Les dates, coordonnées, id
 
 K-NN utilise 12 000 lignes d’apprentissage par ajustement et SVM 3 500. Les validations utilisent toutes les lignes de chaque année. Le nouvel arbre est compatible avec scikit-learn 1.8.0. Le lot final reproduit le GaussianNB à 14 réglages (F1 0,173585). L’ancien notebook à 7 réglages obtenait 0,176681. Les deux modèles supplémentaires LogisticRegression et HistGradientBoosting restent consultables avec leurs résultats d’origine. [Comparatif complet et temps](results/benchmark_final/metrics.csv) · [Paramètres et empreintes](results/benchmark_final/manifest.json)
 
-Le SVM linéaire au seuil de **0,20** obtient un F1 2024 de **0,176646**. Le commit de gel est `ece0598`. Sur 2025 il obtient **0,158 de précision**, **0,802 de rappel**, **0,263 de F1**, **0,610 de ROC-AUC** et **0,178 d’Average Precision**. L’AP utilise la somme des précisions pondérée par les increments de rappel. Aucune variante n’a été choisie à partir du score final. Les négatifs échantillonnés, la météo contemporaine et la réutilisation de 2024 durant le développement limitent la généralisation. [Décision](results/benchmark_final/decision.json) · [Évaluation finale](results/test_final/result.json)
+Le SVM linéaire au seuil de **0,20** obtient un F1 2024 de **0,176646**. Le commit de gel est `ece0598`. Sur 2025 il obtient **0,158 de précision**, **0,802 de rappel**, **0,263 de F1**, **0,610 de ROC-AUC** et **0,178 d’Average Precision**. L’AP utilise la somme des précisions pondérée par les gains de rappel. Aucune variante n’a été choisie à partir du score final. Les négatifs échantillonnés, la météo contemporaine et la réutilisation de 2024 durant le développement limitent la généralisation. [Décision](results/benchmark_final/decision.json) · [Évaluation finale](results/test_final/result.json)
 
 À cellule et année comparables, l’écart moyen des jours positifs est de +3,077 °C et −10,107 points d’humidité. Les tests des signes sur les années donnent p ajustée par Holm de 0,00097656. Les associations persistent avec appariement mensuel. [Analyses et limites](docs/Rapport_MiniProject.pdf)
 
 ## Reproduction
 
-Après activation du venv, depuis la racine, employer des dossiers de sortie neufs pour les expériences. Les audits reproduisent les tableaux sous results/audit_siad03.
+Après activation du venv, depuis la racine, employer des dossiers de sortie neufs pour les expériences. Les commandes ci-dessous écrivent les calculs de développement sous `results/local_runs/` pour permettre la comparaison avec les tables publiées.
 
 ```bash
-python -m src.audit_data
-python -m src.statistical_analysis
+python -m src.audit_data --output results/local_runs/audit
+python -m src.statistical_analysis --output results/local_runs/statistiques
 python -m src.models --output results/local_runs/benchmark
 python -m src.feature_comparison --output results/local_runs/benchmark/ablation_train.csv
-python -m src.final_evaluation --output results/local_runs/test_gele
-python -m src.build_report
+python -m src.development_profiles --output results/local_runs/profils
 ```
 
-L’avant-dernière commande reproduit uniquement l’évaluation du **modèle publié et gelé**. Elle vérifie la décision inscrite dans Git et les empreintes des données, de la configuration et de l’artefact. La génération du PDF utilise Pandoc et XeLaTeX installés sur le système. Le gabarit Markdown accepte des tableaux injectés depuis les CSV et la figure ROC/PR est régénérée à partir des scores. Les versions du lot et les temps sont inclus dans le manifeste et les CSV. L’installation locale de l’app se limite aux dépendances Python.
+Pour examiner le test final, lire le [résultat déjà publié](results/test_final/result.json). Les tests automatiques vérifient sa cohérence avec les prédictions archivées. Pour reconstruire le PDF dans une copie de travail, lancer `python -m src.build_report`. La génération du PDF utilise Pandoc et XeLaTeX installés sur le système. Le gabarit Markdown accepte des tableaux injectés depuis les CSV et la figure ROC/PR est régénérée à partir des scores. Les versions du lot et les temps sont inclus dans le manifeste et les CSV. L’installation locale de l’app se limite aux dépendances Python.
 
 ## Expériences complémentaires et vérification
 
@@ -86,7 +97,7 @@ Après le gel, l’expérience de taille conserve les réglages du benchmark et 
 python -m src.learning_curves --output results/local_runs/size_2024
 ```
 
-Le PDF livré a été produit avec Pandoc et WeasyPrint. Pour utiliser ce moteur, installer `weasyprint==70.0` avec ses dépendances système et définir la variable d’environnement `PANDOC_PDF_ENGINE` à `weasyprint` avant de lancer `python -m src.build_report`. Le moteur par défaut reste XeLaTeX.
+Le PDF livré a été produit avec Pandoc et WeasyPrint. Pour contrôler le PDF existant, installer Poppler (commande `pdftotext`) et lancer `python -m src.build_report --verify` depuis la racine. Pour utiliser ce moteur, installer `weasyprint==70.0` avec ses dépendances système et définir la variable d’environnement `PANDOC_PDF_ENGINE` à `weasyprint` avant de lancer `python -m src.build_report`. Le moteur par défaut reste XeLaTeX.
 
 Le brut versionné sous `Dataset/` est la source commune. Il remplit le rôle du répertoire `data/raw/` dans le plan du professeur. Garder une seule copie évite deux versions concurrentes. Le notebook 01 exécute le nettoyage et écrit les exports historiques. Pour l’exécuter sans écraser ses propres exports, utiliser un clone de travail. Le notebook 02 vérifie les entrées numériques et les plis. Le notebook 03_model_training_evaluation relit les paramètres et les scores du benchmark. Le notebook 03_zeror_naive_bayes reproduit l’expérience historique distincte.
 
@@ -95,13 +106,13 @@ Le brut versionné sous `Dataset/` est la source commune. Il remplit le rôle du
 | Emplacement ou contribution | Contenu |
 |---|---|
 | src/preprocessing.py, src/models.py | Contrat commun, plis et recherches |
-| src/app.py, src/ui/, src/eda_view.py | Six espaces Streamlit et services |
+| src/app.py, src/ui/, src/eda_view.py | Sept espaces Streamlit et services |
 | notebooks/, src/siad03_nb/, src/siad03_extensions/ | Lots de développement historiques et analyses complémentaires |
 | results/benchmark_final/, results/test_final/ | Lots actifs des six modèles et décision gelée |
 | models/, results/protocole_propose.json | Pipelines et paramètres historiques conservés pour traçabilité |
-| SIAD03 | Audit, EDA, statistiques, Zero-R/NB, interface, puis intégration du benchmark des six modèles, tests et rapport avec assistance de développement |
-| Responsable du prétraitement (code à confirmer) | Cadrage du dépôt et travaux initiaux de préparation selon l’historique et le plan |
-| Responsable de l’intégration (code à confirmer) | Arbre historique et résultats associés. L’arbre du benchmark commun a été réentraîné dans le lot SIAD03 |
+| SIAD03 | Nettoyage, EDA, statistiques, Zero-R/NB, interface et intégration du benchmark. Réévaluation des erreurs, vérification des explications et intégration des deux parcours CSV avec assistance au développement. |
+| IASD17 | Arbre historique (d8d06a9). Six commits de 4bea315 à 56c9285 pour les tranches de score, le studio par lot et la page SHAP globale et individuelle. [Contribution originale](docs/CONTRIBUTION_IASD17.md) |
+| Auteur du lot K-NN/ACP (code à confirmer) | Cadrage initial et expérience secondaire au commit 39531eb, avec deux notebooks, un résumé et quatre objets scikit-learn 1.9.0. |
 
 Le plan de démarrage est conservé dans une version publique anonymisée. Les contributions se vérifient par commit. Les documents des premiers lots décrivent leur état à la date de rédaction. [Plan initial](docs/Plan_initial_equipe.pdf)
 
@@ -126,3 +137,13 @@ python -m src.kfold_diagnostic --output results/local_runs/diagnostic_kfold
 ```
 
 L’auteur du lot secondaire a ajouté les notebooks 04_knn et acp, le résumé K-NN et quatre objets sérialisés avec scikit-learn 1.9.0. Ces notebooks emploient 25 entrées dont ndvi_normal. Leur reproduction se fait dans un environnement distinct de celui de Wildfire Atlas (1.8.0). Avec 12 composantes et 2 001 voisins, leur Average Precision sur 2024 est 0,105225. Le registre de l’application continue de charger les pipelines du benchmark publié. [Audit des douze critères, vérifications et proposition au responsable](docs/AUDIT_REEVALUATION.md) · [Rapport collectif](docs/Rapport_MiniProject.pdf)
+
+## Reproduire le diagnostic des alertes
+
+Depuis la racine, la commande suivante lit les scores SVM de validation déjà publiés et écrit trois CSV dans un dossier neuf. Elle reproduit les effectifs aux trois seuils du protocole, les erreurs mensuelles au seuil gelé et la fiabilité par tranche de score.
+
+```bash
+python -m src.validation_alerts --output results/local_runs/alertes_2024
+```
+
+Dans **Model Arena → Alertes du SVM en 2024**, comparer les lignes 0,20 et 0,35. Les F1 sont proches, mais le seuil bas produit 2 216 fausses alertes supplémentaires pour 216 détections supplémentaires retrouvées. Dans **Prediction Studio → Fichier CSV**, télécharger l’exemple, saisir jusqu’à 1 000 cellules-jours puis exporter les classes et scores. [Mode d’emploi et unités](docs/INTERFACE.md)

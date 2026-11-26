@@ -71,3 +71,23 @@ def test_frozen_parameters_match_search_and_serialized_pipeline(name, developmen
         selected = limited(fit, train.label, config['train_caps'].get(name), config['seed'])
         assert (len(selected), len(check)) == (entry['fold_fit'][i], entry['fold_check'][i])
         assert train.year.iloc[selected].max() < train.year.iloc[check].min()
+
+
+@pytest.mark.parametrize('name', ['LogisticRegression', 'HistGradientBoosting'])
+def test_additional_artifacts_reproduce_their_validation_batch(name, development):
+    """Les deux modèles complémentaires affichés dans Arena possèdent leur propre lot."""
+    _, val, features, _, _ = development
+    folder = ROOT / 'results/siad03_extensions/benchmark'
+    saved = pd.read_csv(folder / 'predictions_validation.csv', parse_dates=['date'])
+    keys = ['date', 'cell_id', 'year', 'label']
+    pd.testing.assert_frame_equal(saved[keys], val[keys].reset_index(drop=True))
+    model = joblib.load(folder / f'{name}.joblib')
+    assert list(model.feature_names_in_) == features
+    summary = json.loads((folder / 'search_summary.json').read_text())[name]
+    assert all(model.get_params()[key] == value for key, value in summary['best_params'].items())
+    with threadpool_limits(limits=1):
+        score = model.predict_proba(val[features])[:, list(model.classes_).index(1)]
+    np.testing.assert_allclose(saved[name], score, atol=1e-12, rtol=1e-12)
+    published = pd.read_csv(folder / 'metrics.csv').set_index('model').loc[name]
+    for metric, value in metrics(val.label, score).items():
+        assert published[metric] == pytest.approx(value)

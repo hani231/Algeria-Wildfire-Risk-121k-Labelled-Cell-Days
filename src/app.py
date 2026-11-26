@@ -12,15 +12,19 @@ from src.ui.shell import heading, navigation
 
 st.set_page_config(page_title='Wildfire Atlas · Algérie', page_icon='🌐', layout='wide')
 pages = {'Accueil': overview, 'Exploration': explore, 'Carte': geography,
-         'Modèles': models, 'Prédiction': prediction, 'Méthodologie': methodology}
+         'Modèles': models, 'Prédiction': prediction,
+         'Méthodologie': methodology}
 # Conserver les filtres des espaces momentanément démontés par Streamlit.
 for key in list(st.session_state):
-    if key.startswith(('eda_', 'range_', 'map_', 'studio_')):
+    if key.startswith(('eda_', 'range_', 'map_', 'studio_', 'arena_', 'shap_')):
         st.session_state[key] = st.session_state[key]
 page = navigation()
 heading(page)
 try:
-    if page == 'Méthodologie':
+    if page == 'Explicabilité':
+        from src.ui.shap_page import explainability
+        explainability()
+    elif page == 'Méthodologie':
         protocol, analysis = st.tabs(['Protocole et qualité', 'Analyses appariées'])
         with protocol:
             methodology()

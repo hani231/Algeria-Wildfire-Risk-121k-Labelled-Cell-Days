@@ -16,7 +16,8 @@ Ouvrir l’URL locale affichée dans le terminal. Depuis un environnement Python
 | Data Explorer | Filtrer années, mois, zones, classes et plage météo. Examiner les distributions, les valeurs manquantes et les corrélations, puis exporter la sélection. |
 | Geo Intelligence | Ajuster la période, survoler une cellule, zoomer et consulter ses coordonnées et ses effectifs dans le tableau. |
 | Model Arena | Classer les modèles par métrique sur 2024 et examiner confusion, courbes et réglages. |
-| Prediction Studio | Sélectionner le pipeline, renseigner les groupes de mesures et lire la classe et la probabilité après soumission. |
+| Prediction Studio | Sélectionner le pipeline, renseigner les groupes de mesures et lire la classe, le score et sa tranche après soumission. Charger un CSV de 24 colonnes pour classer des observations en lot et télécharger les prédictions. |
+| Explainability | Choisir un pipeline, consulter le beeswarm et l’importance moyenne SHAP sur la validation 2024, puis décomposer la dernière observation soumise au studio. |
 | Scientific Insights | Consulter le protocole, les contrôles du CSV et la comparaison des températures et humidités avec ou sans appariement mensuel. |
 
 ## Données et limites
@@ -27,7 +28,7 @@ Conserver le CSV brut dans Dataset/, le protocole dans config/ et les lots versi
 
 ## Organisation
 
-L’entrée Streamlit est src/app.py. Le module src/ui/shell.py porte la navigation, atlas.css les styles, geography.py la carte, pages.py la synthèse et le protocole, model_pages.py les espaces modèles et prédiction. Les données et les artefacts sont chargés par services.py. Les distributions et corrélations sont partagées avec la démo autonome dans src/eda_view.py.
+L’entrée Streamlit est src/app.py. Le module src/ui/shell.py porte la navigation, atlas.css les styles, geography.py la carte, pages.py la synthèse et le protocole, model_pages.py les espaces modèles et prédiction, prediction_enhanced.py l’import CSV et l’export du studio, shap_page.py l’espace Explicabilité. Les données et les artefacts sont chargés par services.py. Les tranches de score et le back-end SHAP résident dans src/explainability/. Les distributions et corrélations sont partagées avec la démo autonome dans src/eda_view.py.
 
 [Ordinateur](interface-bureau.png) · [Tablette](interface-tablette.png) · [Mobile](interface-mobile.png)
 
@@ -37,15 +38,19 @@ Les sélections de Data Explorer sont conservées pendant la navigation. « Réi
 
 Model Arena distingue les six classifieurs demandés et les deux supplémentaires. Pour GaussianNB, le classement et les courbes utilisent le benchmark final qui reproduit run_01 (F1 0,173585). Le benchmark antérieur obtenait 0,176681. L’accuracy de Zero-R atteint 92,37 % en classant toutes les lignes en 0, avec 643 détections manquées.
 
-Dans le studio, les libellés précisent les unités établies ou signalent leur incertitude. Une incompatibilité de version ou de schéma interrompt le chargement. Les contrôles sur les entrées précèdent la classification. Les probabilités concernent la classe de l’observation dans cet échantillon.
+Dans le studio, les libellés précisent les unités établies ou signalent leur incertitude. Une incompatibilité de version ou de schéma interrompt le chargement. Les contrôles sur les entrées précèdent la classification. Les probabilités concernent la classe de l’observation dans cet échantillon. Le formulaire affiche le seuil de la décision binaire du modèle et la tranche contenant le score. Les coupures 0,20, 0,35 et 0,50 reprennent les seuils expérimentés sur 2024. Une même tranche peut regrouper des observations classées différemment selon le pipeline choisi.
+
+Dans Explainability, le beeswarm représente les contributions individuelles et la barre leur amplitude absolue moyenne sur les observations complètes affichées de 2024. Le fond empirique est échantillonné sur le train. Les explications par permutation sont approximatives. Leur somme peut reproduire fidèlement le score alors que le partage entre indices météo corrélés dépend des ordres et du fond. Le waterfall conserve le modèle de l’observation soumise au studio. [Méthodes et contrôles](REVUE_SHAP.md)
 
 ## Recette avant la soutenance
 
-1. Lancer l’application sur le poste de présentation. Ouvrir les six espaces, puis répéter en écran étroit. Vérifier que les tableaux restent accessibles et que le formulaire peut être soumis.
+1. Lancer l’application sur le poste de présentation. Ouvrir les sept espaces, puis répéter en écran étroit. Vérifier que les tableaux restent accessibles et que le formulaire peut être soumis.
 2. Dans Exploration, sélectionner une année et un mois, vérifier l’effectif et exporter. Réinitialiser les filtres et comparer au total du train.
 3. Dans Carte, retirer tous les mois, puis en sélectionner un. Vérifier le message pour une sélection vide et le retour des cellules sur la carte.
-4. Dans Modèles, comparer les F1 sur 2024 au seuil 0,50, puis afficher la matrice et les courbes du SVM. Dans Prédiction, vérifier le seuil 0,20 avant et après avoir soumis l’exemple.
-5. Dans Méthodologie, comparer l’appariement annuel et mensuel. Les graphiques doivent suivre la sélection. Noter le navigateur et la largeur d’écran effectivement utilisés.
+4. Dans Modèles, comparer les F1 sur 2024 au seuil 0,50, puis afficher la matrice et les courbes du SVM. Dans Prédiction, vérifier le seuil 0,20 avant et après avoir soumis l’exemple, puis le libellé de tranche du score sous la jauge.
+5. Dans le studio avancé, télécharger l’exemple CSV, charger un CSV de dix observations complètes, vérifier les effectifs des tranches et relire l’export téléchargé avec un tableur. Charger ensuite un fichier volontairement tronqué et vérifier le message de rejet du schéma.
+6. Dans Explainability, laisser le beeswarm et la barre se calculer (SVM : première fois plus longue, puis cachée), soumettre une observation dans Prédiction et vérifier le waterfall dont la légende réconcilie base, contributions et score.
+7. Dans Méthodologie, comparer l’appariement annuel et mensuel. Les graphiques doivent suivre la sélection. Noter le navigateur et la largeur d’écran effectivement utilisés.
 
 ## Recette de réévaluation
 
@@ -54,3 +59,12 @@ Sur un même navigateur, choisir le SVM dans Prediction Studio, modifier le jour
 Dans Model Arena, « Comparaison 2024 » présente les modèles au seuil commun de 0,50. « Test final 2025 » lit le résultat enregistré du SVM à 0,20. Les deux taux répondent à des questions différentes : combien de positifs sont retrouvés et combien d’alertes correspondent à un positif. Dans Data Explorer, chaque coefficient de Spearman requiert au moins trois observations communes et deux variables non constantes.
 
 Captures réelles du panneau de test publié, sur trois largeurs : [ordinateur](reevaluation/arena-bureau.png), [tablette](reevaluation/arena-tablette.png), [téléphone](reevaluation/arena-mobile.png).
+
+## Importer plusieurs cellules-jours
+
+1. Ouvrir Prediction Studio, choisir un pipeline, puis « Fichier CSV ». Le seuil affiché s’applique à chaque ligne.
+2. Télécharger l’exemple. Conserver les 24 noms de colonnes, dans l’ordre souhaité. Utiliser les unités du formulaire, un point pour les décimales et la virgule entre champs. Par défaut, chaque observation doit être complète. L’option « Accepter les mesures manquantes » applique le traitement du pipeline sélectionné. Une ligne entièrement vide est refusée. Les valeurs présentes doivent se situer dans les plages du formulaire. [Dictionnaire des unités](dictionnaire_colonnes.md)
+3. Importer le fichier UTF-8 (1 Mio, 1 000 observations au maximum). Une erreur de schéma, de plage ou de cohérence interrompt le lot entier. Corriger le fichier avant de le soumettre à nouveau.
+4. Vérifier le nombre d’alertes et exporter. La colonne `observation` numérote les lignes du fichier à partir de 1. L’export conserve les mesures, le nom du pipeline, son seuil, la classe et le score. Un export complet peut être réimporté. Seules les mesures entrent dans le pipeline et toutes les colonnes de résultat sont recalculées. L’inférence s’exécute en mémoire avec le pipeline sauvegardé.
+
+Dans Model Arena, « Alertes du SVM en 2024 » présente les trois seuils au niveau de la saison et les erreurs mensuelles au seuil retenu. Dans le tableau de fiabilité, comparer le score moyen à la fraction positive du même intervalle et lire l’effectif avant d’interpréter l’écart.

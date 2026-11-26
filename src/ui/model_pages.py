@@ -2,6 +2,8 @@
 import json
 import pandas as pd
 import streamlit as st
+from src.ui.batch import batch_panel
+from src.explainability.alert_levels import alert_badge
 from src.ui.curves import curves
 from src.ui.services import BENCH, BATCHES, decision, ROOT, ARTIFACTS, comparison, input_summary, pipeline, classify
 from src.ui.units import measure_label
@@ -19,8 +21,11 @@ DESCRIPTIONS = {
 
 
 def models():
-    view = st.radio('Évaluation à consulter', ['Comparaison 2024', 'Test final 2025'],
+    view = st.radio('Évaluation à consulter', ['Comparaison 2024', 'Alertes du SVM en 2024', 'Test final 2025'],
                     horizontal=True, key='arena_cohort')
+    if view == 'Alertes du SVM en 2024':
+        validation_alerts()
+        return
     if view == 'Test final 2025':
         published_result()
         return
@@ -90,6 +95,35 @@ def models():
                "Les matrices comparatives affichées ci-dessus utilisent toutes le seuil 0,50.")
 
 
+def validation_alerts():
+    source = ROOT / 'results/post_freeze/alerts_2024'
+    thresholds = pd.read_csv(source / 'thresholds.csv')
+    months = pd.read_csv(source / 'months.csv')
+    bins = pd.read_csv(source / 'reliability.csv')
+    frozen = decision()
+    row = thresholds.set_index('threshold').loc[frozen['threshold']]
+    st.subheader('Combien de fausses alertes pour une détection retrouvée ?')
+    st.write(f"{frozen['model']} au seuil retenu de {frozen['threshold']:.2f} · "
+             f"{int(row.tp)} des {int(row.positives)} détections retrouvées et "
+             f"{int(row.fp)} fausses alertes sur {int(row.n)} cellules-jours de validation.")
+    names = {'threshold': 'Seuil', 'tp': 'Détections retrouvées', 'fp': 'Fausses alertes',
+             'fn': 'Détections manquées', 'precision': 'Précision', 'recall': 'Rappel', 'f1': 'F1'}
+    st.dataframe(thresholds[list(names)].rename(columns=names), hide_index=True, width='stretch')
+    st.caption('Les trois seuils ont été comparés sur la même saison. Le F1 a servi à la sélection. '
+               'Les effectifs permettent de discuter le coût des alertes.')
+    with st.expander('Erreurs par mois au seuil retenu'):
+        st.dataframe(months[['month', 'n', 'positives', 'tp', 'fp', 'fn']].rename(
+            columns={**names, 'month': 'Mois', 'n': 'Cellules-jours', 'positives': 'Positifs'}),
+            hide_index=True, width='stretch')
+    with st.expander('Fiabilité du score sur l’échantillon de validation'):
+        st.dataframe(bins.rename(columns={'bin': 'Intervalle du score', 'n': 'Effectif',
+                                          'predicted': 'Score moyen', 'observed': 'Fraction positive'}),
+                     hide_index=True, width='stretch')
+        st.caption('Comparer le score moyen et la fraction positive dans chaque tranche occupée. '
+                   'Les petits effectifs rendent ces fractions instables. Les témoins échantillonnés '
+                   'et la météo du jour limitent la portée à une classification rétrospective.')
+
+
 def published_result():
     result = json.loads((ROOT/'results/test_final/result.json').read_text())
     frozen = decision()
@@ -117,7 +151,6 @@ def published_result():
 
 
 def prediction():
-    st.write('Choisissez un modèle puis ajustez les mesures d’une observation. Les valeurs initiales proviennent du premier jour du jeu d’entraînement disponible avec tous les prédicteurs.')
     names = [name for name, path in ARTIFACTS.items() if path.is_file()]
     if not names:
         st.warning('Aucun pipeline compatible disponible.')
@@ -125,11 +158,17 @@ def prediction():
     name = st.selectbox('Pipeline', names, key='studio_model')
     final = decision()
     threshold = final['threshold'] if final['model'] == name else .5
-    st.caption(f"Seuil appliqué à cette observation : {threshold:.2f}. "
+    st.caption(f"Seuil de classification : {threshold:.2f}. "
                "Le comparatif des modèles sur 2024 utilise 0,50 pour tous.")
     model = pipeline(name)
     features = list(model.feature_names_in_)
     summary = input_summary(tuple(features))
+    mode = st.radio('Mode de saisie', ['Observation individuelle', 'Fichier CSV'], horizontal=True,
+                    key='studio_mode')
+    if mode == 'Fichier CSV':
+        batch_panel(name, model, threshold, summary)
+        return
+    st.caption('Le formulaire est initialisé avec la première observation complète du train.')
     settings, result = st.columns([1.7, 1])
     with settings.container():
         st.subheader('Mesures de la cellule-jour')
@@ -170,6 +209,9 @@ def prediction():
         st.metric('Classe estimée', '1 · Avec détection' if label else '0 · Sans détection')
         if score is not None:
             st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
+            st.markdown(alert_badge(score), unsafe_allow_html=True)
+            st.caption(f'La classe 1 est attribuée dès {threshold:.2f} pour {name}. '
+                       'Les tranches de score sont des repères de lecture.')
         st.caption('Le score estime la classe d’une cellule-jour dans cet échantillon. Les jours sans détection ont été sélectionnés et la météo inclut la journée observée. Un score de classe ne donne donc pas le risque futur sur le territoire.')
         with st.expander('Mesures utilisées'):
             st.table(pd.Series(values, name='Valeur'))

@@ -7,3 +7,4 @@ matplotlib==3.10.8
 seaborn==0.13.2
 joblib==1.5.3
 streamlit==1.51.0
+shap==0.54.1

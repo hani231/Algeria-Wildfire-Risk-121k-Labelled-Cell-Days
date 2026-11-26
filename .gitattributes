@@ -1,0 +1,9 @@
+# Préserver les octets dont les empreintes sont attestées par les lots scientifiques.
+Dataset/dataset.csv -text
+config/protocole.json text eol=lf
+results/protocole_propose.json text eol=lf
+results/benchmark_final/decision.json text eol=lf
+src/siad03_nb/*.py text eol=lf
+
+# Renseigner la révision dans le bilan distribué par git archive.
+docs/AUDIT_FINAL_REEVALUATION.md export-subst

@@ -108,3 +108,15 @@ def test_test_cohort_displays_published_metrics_without_inference(monkeypatch):
     assert [item.value for item in app.metric] == [
         f'{published[key]:.3f}' for key in ('precision', 'recall', 'f1')]
     assert not app.selectbox
+
+
+def test_alert_view_uses_published_validation_counts():
+    import pandas as pd
+    app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=60).run()
+    app.radio(key='page').set_value('Modèles').run()
+    app.radio(key='arena_cohort').set_value('Alertes du SVM en 2024').run()
+    assert not app.exception
+    table = app.dataframe[0].value
+    source = pd.read_csv(ROOT/'results/post_freeze/alerts_2024/thresholds.csv')
+    assert table['Fausses alertes'].tolist() == source.fp.tolist()
+    assert table['Détections retrouvées'].tolist() == source.tp.tolist()
