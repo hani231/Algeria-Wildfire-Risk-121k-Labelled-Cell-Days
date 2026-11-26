@@ -7,7 +7,7 @@ critere,points_max,intitule,etat,preuve,limite
 2.1,1.5,Application locale,Exécuté et vérifié,src/app.py et tests/test_ui_app.py,Recette sur le poste universitaire à exécuter selon docs/INTERFACE.md
 2.2,1,EDA interactive,Exécuté et vérifié,src/eda_view.py et tests/test_eda.py,Proportions propres au plan de collecte
 2.3,1.5,Classification interactive,Exécuté et vérifié,src/ui/model_pages.py et tests/test_ui_quality.py et tests/test_prediction_batch.py,Probabilités de classe sur échantillon
-3.1,1,Structure et dépendances,Implémenté,data/raw/README.md et notebooks/ et .github/workflows/tests.yml,CI hébergée à vérifier après publication
+3.1,1,Structure et dépendances,Implémenté,data/raw/README.md et notebooks/ et .github/workflows/tests.yml,État du run à contrôler sur le SHA remis
 3.2,2,Contributions Git,Traçable,Historique des PR et commits du lot final SIAD03,Attribution et note individuelles réservées au professeur
 4.1,1.5,Rapport scientifique,Exécuté et vérifié,docs/Rapport_MiniProject.pdf et sa source .md et src/build_report.py,Relecture collective avant rendu
-4.2,1.5,Documentation,Implémenté,README.md et docs/SOURCES.md et docs/INTERFACE.md,Deux codes étudiants à confirmer par leurs titulaires
+4.2,1.5,Documentation,Implémenté,README.md et docs/SOURCES.md et docs/INTERFACE.md,Code de l’auteur K-NN/ACP à confirmer par son titulaire

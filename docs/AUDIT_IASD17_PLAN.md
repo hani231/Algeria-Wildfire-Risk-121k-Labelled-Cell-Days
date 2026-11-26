@@ -1,4 +1,6 @@
 # RAPPORT D'AUDIT — PROJ-IASD12 Wildfire Atlas
+
+> Document historique de la branche IASD17 au commit 56c9285. Les tests et libellés ci-dessous décrivent cette livraison. Les revues d’intégration détaillent le comportement livré pour la réévaluation. [Explications SHAP](REVUE_SHAP.md) · [Studio et CSV](REVUE_STUDIO.md)
 ### Phase 1 : analyse exclusive (aucune modification effectuée)
 **Auteur :** IASD17 · **Date :** 24 novembre 2026 · **Cible de travail :** `~/projects/Algeria-Wildfire-Risk-121k-Labelled-Cell-Days` (clone Git, branche `main`)
 

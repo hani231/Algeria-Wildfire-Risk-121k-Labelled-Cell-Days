@@ -1,5 +1,7 @@
 # Contribution IASD17 — Studio avancé et explicabilité SHAP
 
+> Document historique de la branche IASD17 au commit 56c9285. Les tests et libellés ci-dessous décrivent cette livraison. Les revues d’intégration détaillent le comportement livré pour la réévaluation. [Explications SHAP](REVUE_SHAP.md) · [Studio et CSV](REVUE_STUDIO.md)
+
 **Auteur :** IASD17 · **Date :** 24 novembre 2026 · **Branche :** `feature/iasd17-streamlit-shap`
 **Plan de référence :** [AUDIT_IASD17_PLAN.md](AUDIT_IASD17_PLAN.md) · **Environnement :** Python 3.12, `requirements-dev.txt` + `shap==0.54.1`
 
