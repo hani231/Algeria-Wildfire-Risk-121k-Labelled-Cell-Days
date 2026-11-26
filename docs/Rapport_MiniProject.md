@@ -1,14 +1,14 @@
 ---
 title: "Wildfire Atlas"
 subtitle: "Classification rétrospective des détections en Algérie et dans les cellules voisines"
-author: "Mini-projet de fouille de données · Contribution d’intégration SIAD03"
-date: "24 novembre 2026"
+author: "Mini-projet collectif de fouille de données"
+date: "26 novembre 2026"
 geometry: "a4paper,margin=21mm"
 fontsize: 11pt
 colorlinks: true
 ---
 
-# Question de recherche
+# Résumé et question de recherche
 
 Peut-on distinguer les cellules-jours avec détection satellitaire à partir de la météo, de la végétation et de la saison ? La cible vaut 1 lorsqu’une détection répond aux critères du producteur. Les négatifs sont échantillonnés. La proportion de jours positifs dans le tableau dépend de ce plan de collecte.
 
@@ -45,10 +45,7 @@ Le train contient 28 586 positifs sur 104 979 lignes (27,2 %). En 2024 il y en a
 
 Pour chacune des deux variables, on compare les moyennes des classes dans chaque couple cellule/année où les deux classes existent. On calcule ensuite les écarts moyens annuels. Cette agrégation réduit la pseudo-réplication des cellules-jours. Le test binomial exact des signes porte sur les années aux écarts non nuls. Chaque année contribue un signe, quel que soit son nombre de cellules. Sous H0, un écart positif a une probabilité de 0,5 parmi les années sans égalité. H1 est bilatérale. Le choix du test évite une hypothèse de normalité sur douze amplitudes annuelles.
 
-| Appariement | Écart moyen de température maximale | Écart moyen d’humidité |
-|---|---:|---:|
-| Cellule et année | +3,077 °C | −10,107 points |
-| Cellule, année et mois | +2,307 °C | −9,591 points |
+{{APPARIEMENTS}}
 
 Dans les deux analyses, les douze années vont dans le sens d’une température plus élevée et d’une humidité plus basse les jours positifs. Pour chaque variable, p brute = 0,00048828. Holm corrige les deux tests de chaque famille, avec p ajustée = 0,00097656. La sensibilité mensuelle réduit l’amplitude des différences. Elle réutilise les mêmes observations. L’indépendance des saisons demeure incertaine et les associations ne permettent aucune conclusion causale.
 
@@ -102,7 +99,7 @@ Expérience complémentaire postérieure au gel. Chaque taille utilise trois tir
 
 # Six familles et coût de recherche
 
-**Zero-R** apprend la classe majoritaire et constitue le point de comparaison sans hyperparamètre. **GaussianNB** combine des distributions conditionnelles gaussiennes. Les corrélations météo fragilisent son hypothèse d’indépendance. Le lissage de variance explore 14 valeurs de $10^{-12}$ à 10. La sélection retient 1. Le lot historique à sept candidats obtenait un F1 2024 de 0,176681 contre 0,173585 dans la grille étendue.
+**Zero-R** apprend la classe majoritaire et constitue le point de comparaison sans hyperparamètre. **GaussianNB** combine des distributions conditionnelles gaussiennes. Les corrélations météo fragilisent son hypothèse d’indépendance. Le lissage de variance explore 14 valeurs de 10⁻¹² à 10. La sélection retient 1. Le lot historique à sept candidats obtenait un F1 2024 de 0,176681 contre 0,173585 dans la grille étendue.
 
 **K-NN** vote à partir des distances entre observations standardisées. Les configurations comparent 15/45 voisins, les distances Manhattan/euclidienne et les poids uniformes/inverses. Le réglage retenu est 15 voisins euclidiens à poids uniformes. **SVM** ajuste une séparation de marge maximale et convertit les marges en scores probabilistes par calibration interne aux données d’apprentissage. Les six configurations explorent linéaire, RBF et polynomial de degré 2 avec régularisation et gamma. Le gagnant interne est linéaire, C = 0,1.
 
@@ -144,6 +141,20 @@ Pour le SVM au seuil 0,20, le rappel 2024 varie de 0,585 en septembre à 0,941 e
 
 \newpage
 
+# Changements entre entraînement et validation
+
+![Climat et part positive de juin à octobre. Les bandes indiquent les quartiles des mesures par mois dans chaque cohorte.](results/post_freeze/development_profiles/comparaison_mensuelle.png){width=94%}
+
+En août, la température maximale médiane est proche dans les deux cohortes (33,5 °C en entraînement et 33,7 °C en 2024). La part des détections passe pourtant de 46,0 % à 10,1 % dans les cellules-jours échantillonnées. Cette comparaison par mois montre pourquoi un changement de prévalence ne se réduit pas à une variation de température. Les blocs de coordonnées d’un degré, les effectifs mesurés et les quantiles se trouvent dans *results/post_freeze/development_profiles/*.
+
+**Erreurs du SVM en 2024 au seuil gelé de 0,20.** Les quartiles de température sont définis sur le train. Les colonnes comptent les vrais positifs, faux positifs, faux négatifs et vrais négatifs par intervalle.
+
+{{TEMPERATURE}}
+
+Dans la tranche la plus chaude, le modèle retrouve 244 des 248 détections, avec 2 015 fausses alertes. Dans la plus fraîche, il en retrouve 10 sur 73. La saison, la géographie et les autres variables liées à la chaleur peuvent contribuer à ces écarts. L’analyse décrit une seule saison de validation.
+
+\newpage
+
 # Du choix sur 2024 au résultat final sur 2025
 
 Le SVM au seuil 0,20 obtient un F1 de 0,176646 sur la validation utilisée pour le sélectionner. Au seuil 0,35, il obtenait 0,175832. Malgré ces F1 proches, descendre de 0,35 à 0,20 retrouve 216 détections supplémentaires pour 2 216 fausses alertes supplémentaires. Le modèle de 3 500 observations a été conservé à l’identique, avec vérification des empreintes SHA-256 de l’artefact, de la configuration et du CSV avant l’évaluation.
@@ -166,14 +177,28 @@ Sur 8 467 lignes, le résultat final comprend **900 vrais positifs, 222 faux né
 
 \newpage
 
+# À quoi le modèle attribue-t-il le score d’une observation ?
+
+La page SHAP explique le score de la classe avec détection. Le point de départ est le score moyen du modèle sur un fond de vingt observations complètes du train. Une contribution positive augmente le score par rapport à cette référence. Le graphique individuel en cascade relie la base au score obtenu pour la cellule-jour. La vue globale résume l’amplitude et le sens des contributions sur des observations complètes de validation 2024.
+
+![Explications de scores dans la page SHAP de Wildfire Atlas.](docs/reevaluation/shap-integration.png){width=86%}
+
+Pour l’arbre et la forêt, TreeExplainer calcule les contributions en tenant compte de la structure des arbres et du fond choisi, en espace de probabilité. Pour les six autres pipelines, deux permutations des variables et leurs parcours inverses approximent les contributions. La somme peut restituer le score avec précision alors que la répartition entre variables dépend des permutations. [Méthode de Shapley appliquée aux prédictions](https://arxiv.org/abs/1705.07874).
+
+Sur 25 observations de validation tirées avec la graine 42, l’écart absolu maximal entre le score positif et la base augmentée des contributions atteint 6,78 × 10⁻⁸ pour l’arbre, 1,80 × 10⁻⁸ pour la forêt et au plus 3,33 × 10⁻¹⁶ pour les six autres modèles. Les 25 observations ne contiennent qu’une détection, et le fond en contient quatre. Un classement global sur cet échantillon possède donc une portée limitée. Les températures corrélées partagent de l’information et le masquage peut combiner des valeurs peu plausibles. Ces contributions décrivent la réponse du modèle à la référence choisie.
+
+\newpage
+
 # Application, contributions et reproduction
 
 ![Wildfire Atlas. La carte regroupe les cellules-jours observées par cellule.](docs/interface-bureau.png){width=78%}
 
 Command Center synthétise la couverture. Data Explorer partage les filtres entre statistiques descriptives, données manquantes, histogramme/KDE, fréquences, corrélations et export. Geo Intelligence contrôle les coordonnées. Model Arena rattache scores, courbes et matrices à leurs fichiers d’expérience. Prediction Studio conserve les mesures pendant la navigation et affiche le résultat correspondant au modèle, au seuil et aux entrées soumis. Model Arena présente les fausses alertes par mois et par seuil en 2024, puis le résultat publié sur 2025 dans une vue distincte. Le studio accepte également un CSV de 24 mesures par ligne et exporte les scores dans l’ordre du fichier. Scientific Insights présente le protocole et les tests appariés.
 
-Le dépôt collectif apporte les observations, le cadrage et un arbre historique. Le lot SIAD03 comprend audit, nettoyage, statistiques, EDA, Zero-R/NB et interface. La branche d’intégration SIAD03 ajoute les recherches K-NN, SVM, forêt et arbre compatible, le gel du modèle et ce rapport, avec assistance de développement. Le plan initial décrit une répartition prévue. L’historique Git établit les livraisons effectives.
+IASD17 a livré l’explicabilité SHAP, les bandes de score et son parcours de prédiction par lot. SIAD03 a intégré et vérifié ces fonctionnalités avec le contrat commun. Le dépôt collectif apporte les observations, le cadrage et un arbre historique. Le lot SIAD03 comprend audit, nettoyage, statistiques, EDA, Zero-R/NB et interface. La branche d’intégration SIAD03 ajoute les recherches K-NN, SVM, forêt et arbre compatible, le gel du modèle et ce rapport, avec assistance de développement. Le lot secondaire K-NN et ACP reste attribué à son auteur dans l’historique Git.
 
 Depuis la racine, installer `requirements-dev.txt` sous Python 3.12. Lancer `python -m pytest -q` puis `python -m streamlit run src/app.py`. La commande `python -m src.models --output results/local_runs/benchmark` répète le développement dans un dossier neuf. Le README décrit la reproduction séparée du test gelé et de ce PDF. Les prédictions, paramètres par pli, versions et empreintes sont disponibles dans *results/benchmark_final/*.
+
+**Conclusion.** Le transfert entre saisons et le coût des faux positifs dominent la lecture du résultat. Une utilisation prospective demanderait de connaître les mesures au moment de l’alerte et de suivre les performances sur une nouvelle cohorte.
 
 **Références.** [Cahier du mini-projet](https://github.com/hosniadilemp-a11y/DataMiningProjectPage) · [Dictionnaire du producteur](https://github.com/Abdelmalek05/fire-detection-model/blob/0755f4e47f54a9e582b4f53d28f2a610098bbf1c/docs/DATASET.md) · [Jeu de données](https://www.kaggle.com/datasets/abdelmaleknedjar/algeria-wildfire-risk-121k-labelled-cell-days) · [Validation croisée scikit-learn](https://scikit-learn.org/stable/modules/cross_validation.html) · [Test binomial exact SciPy](https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.binomtest.html). Données sous CC BY 4.0, attributions complètes dans *docs/SOURCES.md*.
