@@ -3,9 +3,8 @@ import json
 import pandas as pd
 import streamlit as st
 from src.ui.batch import batch_panel
-from src.explainability.alert_levels import alert_badge, alert_level
+from src.explainability.alert_levels import alert_badge
 from src.ui.curves import curves
-from src.ui.prediction_enhanced import advanced_studio
 from src.ui.services import BENCH, BATCHES, decision, ROOT, ARTIFACTS, comparison, input_summary, pipeline, classify
 from src.ui.units import measure_label
 
@@ -188,9 +187,6 @@ def prediction():
                                       value=int(limits.initial), step=1)
                     values[key] = columns[i % 2].number_input(measure_label(key), key='studio_input_'+key, **params)
         submitted = st.button('Prédire', type='primary', icon=':material/play_arrow:')
-    st.divider()
-    st.subheader('Studio avancé · import CSV et export')
-    advanced_studio()
     with result.container(border=True):
         st.subheader('Lecture du résultat')
         signature = (name, threshold, tuple(values.items()))
@@ -213,9 +209,9 @@ def prediction():
         st.metric('Classe estimée', '1 · Avec détection' if label else '0 · Sans détection')
         if score is not None:
             st.progress(score, text=f'Probabilité du modèle · classe 1 · {score:.1%}')
-            level = alert_level(score)
             st.markdown(alert_badge(score), unsafe_allow_html=True)
-            st.caption(f'Position sur les seuils du protocole : {level.description}.')
+            st.caption(f'La classe 1 est attribuée dès {threshold:.2f} pour {name}. '
+                       'Les tranches de score sont des repères de lecture.')
         st.caption('Le score estime la classe d’une cellule-jour dans cet échantillon. Les jours sans détection ont été sélectionnés et la météo inclut la journée observée. Un score de classe ne donne donc pas le risque futur sur le territoire.')
         with st.expander('Mesures utilisées'):
             st.table(pd.Series(values, name='Valeur'))

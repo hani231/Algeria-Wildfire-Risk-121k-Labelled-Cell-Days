@@ -12,31 +12,31 @@ def test_thresholds_match_protocol():
 
 
 @pytest.mark.parametrize('score,expected', [
-    (0.0, 'Faible'), (0.199, 'Faible'), (0.2, 'Modéré'), (0.349, 'Modéré'),
-    (0.35, 'Élevé'), (0.499, 'Élevé'), (0.5, 'Critique'), (1.0, 'Critique')])
+    (0.0, '[0.00, 0.20['), (0.199, '[0.00, 0.20['), (0.2, '[0.20, 0.35['), (0.349, '[0.20, 0.35['),
+    (0.35, '[0.35, 0.50['), (0.499, '[0.35, 0.50['), (0.5, '[0.50, 1.00]'), (1.0, '[0.50, 1.00]')])
 def test_alert_boundaries(score, expected):
     assert alert_level(score).label == expected
 
 
 def test_level_keys_colors_and_description():
     level = alert_level(0.6)
-    assert level.key == 'critique'
-    assert level.color == '#c92a2a'
+    assert level.key == 'tranche_4'
+    assert level.color == '#354969'
     assert '0.50' in level.description
 
 
 def test_badge_contains_label_and_color():
     badge = alert_badge(0.6)
-    assert 'Critique' in badge and '#c92a2a' in badge
-    assert alert_badge(0.1).count('#2b8a3e') == 1
+    assert '[0.50, 1.00]' in badge and '#354969' in badge
+    assert alert_badge(0.1).count('#354969') == 1
 
 
 def test_alert_labels_series():
-    assert alert_labels([0.1, 0.3, 0.4, 0.9]) == ['Faible', 'Modéré', 'Élevé', 'Critique']
+    assert alert_labels([0.1, 0.3, 0.4, 0.9]) == ['[0.00, 0.20[', '[0.20, 0.35[', '[0.35, 0.50[', '[0.50, 1.00]']
 
 
 def test_custom_thresholds_respected():
-    assert alert_level(0.3, thresholds=(0.1, 0.2, 0.9)).label == 'Élevé'
+    assert alert_level(0.3, thresholds=(0.1, 0.2, 0.9)).label == '[0.20, 0.90['
 
 
 @pytest.mark.parametrize('score', [-0.1, 1.1, float('nan'), float('inf'), 'x', None])

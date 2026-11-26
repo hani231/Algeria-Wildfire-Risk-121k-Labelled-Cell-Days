@@ -66,29 +66,44 @@ def classify(model, values, threshold=0.5):
     return int(labels[0]), None if scores is None else float(scores[0])
 
 
-def classify_rows(model, frame, threshold):
-    """Valider tout le lot avant l'unique appel au pipeline déjà chargé."""
-    columns = list(model.feature_names_in_)
-    if frame.empty or not frame.columns.is_unique or set(frame.columns) != set(columns):
-        raise ValueError('Entrées incomplètes ou inattendues.')
+def validate_measures(frame, columns, *, allow_missing=False):
+    """Normaliser les mesures dans l’ordre du pipeline avant toute inférence."""
+    if frame.empty:
+        raise ValueError('Le fichier ne contient aucune observation.')
+    if not frame.columns.is_unique or set(frame.columns) != set(columns):
+        raise ValueError('Entrées incomplètes, dupliquées ou inattendues.')
     try:
-        frame = frame[columns].astype(float)
+        frame = frame[list(columns)]
+        frame = frame.mask(frame.eq('')).astype(float)
     except (TypeError, ValueError, OverflowError) as error:
         raise ValueError('Chaque mesure doit être numérique.') from error
-    if not np.isfinite(frame).all().all():
-        raise ValueError('Chaque mesure doit être renseignée et finie.')
+    if np.isinf(frame.to_numpy()).any():
+        raise ValueError('Les valeurs infinies sont interdites.')
+    if frame.isna().all(axis=1).any():
+        raise ValueError('Une observation entière est manquante.')
+    if not allow_missing and frame.isna().any().any():
+        raise ValueError('Chaque mesure doit être renseignée.')
     violations = [key.replace('_', ' ') for key, count in coherence_counts(frame).items() if count]
     if violations:
         raise ValueError('Mesures physiquement incohérentes : ' + ', '.join(violations))
     for key in ('doy', 'ndvi_stale_days', 'days_since_rain_1mm'):
-        if frame[key].mod(1).ne(0).any():
+        if frame[key].dropna().mod(1).ne(0).any():
             raise ValueError(f'{key} doit être un nombre entier de jours.')
-    if not frame.doy.between(1, 366).all():
+    if not frame.doy.dropna().between(1, 366).all():
         raise ValueError('Le jour de l’année doit être compris entre 1 et 366.')
+    return frame
+
+
+def score_measures(model, values, threshold):
+    """Classifier un tableau numérique déjà contrôlé, avec l’indice réel de la classe 1."""
     if not hasattr(model, 'predict_proba'):
-        return model.predict(frame), None
-    scores = model.predict_proba(frame)[:, list(model.classes_).index(1)]
+        return model.predict(values), None
+    scores = model.predict_proba(values)[:, list(model.classes_).index(1)]
     return (scores >= threshold).astype(int), scores
+
+
+def classify_rows(model, frame, threshold):
+    return score_measures(model, validate_measures(frame, model.feature_names_in_), threshold)
 
 
 @st.cache_data
