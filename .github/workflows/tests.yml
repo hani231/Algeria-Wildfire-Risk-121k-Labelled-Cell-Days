@@ -14,11 +14,27 @@ jobs:
       OMP_NUM_THREADS: "1"
       OPENBLAS_NUM_THREADS: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
+      - name: Créer le venv du projet
+        shell: bash
+        run: |
+          python -m venv .venv
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            echo "$GITHUB_WORKSPACE/.venv/Scripts" >> "$GITHUB_PATH"
+          else
+            echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+          fi
       - run: python -m pip install -r requirements-dev.txt
-      - run: python -m pip check
+      - name: Vérifier les dépendances du venv
+        shell: bash
+        run: |
+          python -c 'import sys; assert sys.prefix != sys.base_prefix, sys.executable'
+          if ! details=$(python -m pip check); then
+            while IFS= read -r line; do echo "::error::$line"; done <<< "$details"
+            exit 1
+          fi
       - run: python -m pytest -q
