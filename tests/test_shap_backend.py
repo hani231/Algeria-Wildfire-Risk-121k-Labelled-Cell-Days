@@ -31,7 +31,7 @@ def test_sample_background_deterministic(features):
 
 def test_sample_background_requires_complete_rows():
     with pytest.raises(ValueError, match='complète'):
-        sample_background(pd.DataFrame({'a': [np.nan]}), ['a'])
+        sample_background(pd.DataFrame({'a': [np.nan], 'split': ['train'], 'year': [2017]}), ['a'])
 
 
 @pytest.mark.parametrize('name,strategy', [
@@ -49,7 +49,8 @@ def test_strategy_selection(name, strategy, features, background):
 @pytest.mark.parametrize('name', ALL_PIPELINES)
 def test_explanations_are_additive(name, features, background):
     model = pipeline(name)
-    sample = training()[features].dropna().iloc[:8]
+    from src.ui.shap_page import validation
+    sample = validation()[features].dropna().sample(8, random_state=42)
     explanation = make_explainer(model, background)(sample)
     values = np.asarray(explanation.values, dtype=float)
     base = np.asarray(explanation.base_values, dtype=float)
@@ -57,7 +58,8 @@ def test_explanations_are_additive(name, features, background):
         values, base = values[:, :, 1], base[:, 1]
     totals = base + values.sum(axis=1)
     proba = model.predict_proba(sample)[:, list(model.classes_).index(1)]
-    assert np.allclose(totals, proba, atol=1e-6), name
+    assert np.allclose(totals, proba, atol=1e-6, rtol=0), name
+    assert np.allclose(base, model.predict_proba(background)[:, list(model.classes_).index(1)].mean(), atol=1e-6, rtol=0)
     assert values.shape == (len(sample), 24)
     assert explanation.feature_names == features
 
@@ -103,4 +105,52 @@ def test_waterfall_explains_last_studio_prediction():
     app.radio(key='page').set_value('Explicabilité').run()
     assert not app.exception and not app.error
     assert any('score du modèle' in item.value for item in app.caption)
-    assert any('Niveau d’alerte' in item.value for item in app.markdown)
+    assert any('Tranche du score' in item.value for item in app.markdown)
+
+@pytest.mark.parametrize(('split', 'year'), [('val', 2024), ('test', 2025), ('train', 2024)])
+def test_background_rejects_other_cohorts(split, year):
+    with pytest.raises(ValueError, match='train'):
+        sample_background(pd.DataFrame({'a': [0.], 'split': [split], 'year': [year]}), ['a'])
+
+
+def test_permutations_reproducible_across_requests(background):
+    model = pipeline('GaussianNB')
+    sample = background.iloc[:3]
+    first = make_explainer(model, background)
+    values = first(sample).values
+    reordered = make_explainer(model, background)(sample.iloc[::-1]).values
+    np.testing.assert_allclose(values, reordered[::-1], rtol=0, atol=1e-12)
+    np.testing.assert_allclose(first(sample.iloc[:1]).values, values[:1], rtol=0, atol=1e-12)
+    with pytest.raises(ValueError, match='schéma'):
+        first(sample.iloc[:, ::-1])
+
+
+def test_beeswarm_displays_observations(monkeypatch):
+    from src.ui import shap_page
+    shapes = []
+
+    def capture(fig):
+        shapes.append(sum(len(collection.get_offsets()) for collection in fig.axes[0].collections))
+
+    monkeypatch.setattr(shap_page.st, 'pyplot', capture)
+    app = AppTest.from_file(str(ROOT/'src/app.py'), default_timeout=120).run()
+    app.radio(key='page').set_value('Explicabilité').run()
+    assert not app.exception and not app.error
+    assert shapes and shapes[0] >= app.selectbox(key='shap_rows').value
+
+
+def test_contributions_follow_feature_names_and_positive_class():
+    class LinearScore:
+        feature_names_in_ = ['a', 'b', 'c']
+        classes_ = [1, 0]
+
+        def predict_proba(self, frame):
+            score = frame['a'] * .4 + frame['c'] * .2
+            return np.column_stack((score, 1 - score))
+
+    model = LinearScore()
+    background = pd.DataFrame([[0., 0., 0.], [1., 1., 1.]], columns=model.feature_names_in_)
+    row = pd.DataFrame([[1., 0., 0.]], columns=model.feature_names_in_)
+    exp = make_explainer(model, background)(row)
+    np.testing.assert_allclose(exp.base_values, [.3])
+    np.testing.assert_allclose(exp.values, [[.2, 0., -.1]], atol=1e-12)

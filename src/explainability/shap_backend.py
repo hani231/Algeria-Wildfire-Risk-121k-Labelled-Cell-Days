@@ -1,9 +1,4 @@
-"""Back-end SHAP : exact sur les arbres, permutation model-agnostic ailleurs.
-
-Les explications sont additives : base + somme des contributions = score du
-modèle pour la classe 1. Aucun réentraînement : seuls le préprocesseur
-figé et l'estimateur sauvegardés sont appelés.
-"""
+"""Attributions du score de classe 1 par rapport à un même fond empirique."""
 import numpy as np
 import pandas as pd
 import shap
@@ -12,72 +7,76 @@ TREE_MODELS = ('DecisionTreeClassifier', 'RandomForestClassifier')
 
 
 def sample_background(data, features, size=20, seed=42) -> pd.DataFrame:
-    """Échantillon de fond déterministe sur les observations complètes."""
+    """Tirer un fond parmi les observations complètes du train 2012–2023."""
+    if not {'split', 'year'} <= set(data) or not (
+            data.split.eq('train') & data.year.between(2012, 2023)).all():
+        raise ValueError('Le fond requiert exclusivement des lignes du train 2012–2023.')
     complete = data[list(features)].dropna()
     if complete.empty:
         raise ValueError('Aucune observation complète pour l’échantillon de fond.')
     return complete.sample(n=min(size, len(complete)), random_state=seed)
 
 
-def _final_estimator(model):
-    return model.steps[-1][1] if hasattr(model, 'steps') else model
-
-
-def _preprocessor(model):
-    if hasattr(model, 'steps') and len(model.steps) > 1:
-        return model[:-1]
-    return None
-
-
 class PipelineExplainer:
-    """Explique la probabilité de la classe 1 d'un pipeline entraîné.
+    """Décomposer le score du modèle sauvegardé, sans ajuster ses paramètres."""
 
-    Stratégie « arbre » : TreeExplainer exact sur l'estimateur final,
-    lecture de la classe 1 uniquement. Stratégie « permutation » :
-    permutation des features sur predict_proba[:, 1] avec
-    max_evals = 2p + 1, pour les modèles sans arbre interprétable.
-    """
-
-    def __init__(self, model, background):
+    def __init__(self, model, background, seed=42):
         self.features = list(model.feature_names_in_)
         self.model = model
+        self.positive = list(model.classes_).index(1)
+        if list(background.columns) != self.features or background.empty:
+            raise ValueError('Schéma du fond incompatible avec les entrées du modèle.')
+        self.background = background.to_numpy(dtype=float)
         self.background_size = len(background)
-        estimator = _final_estimator(model)
-        if type(estimator).__name__ in TREE_MODELS:
-            self.strategy = 'arbre'
-            self._tree = shap.TreeExplainer(estimator)
-            self._prep = _preprocessor(model)
+        self.base = model.predict_proba(background)[:, self.positive].mean()
+        estimator = model.steps[-1][1] if hasattr(model, 'steps') else model
+        self.strategy = 'arbre' if type(estimator).__name__ in TREE_MODELS else 'permutation'
+        if self.strategy == 'arbre':
+            self.prep = model[:-1] if hasattr(model, 'steps') and len(model.steps) > 1 else None
+            transformed = self.prep.transform(background) if self.prep is not None else self.background
+            # Les deux pipelines arbres conservent l'ordre et la dimension des colonnes.
+            self.tree = shap.TreeExplainer(estimator, data=transformed, model_output='probability',
+                                           feature_perturbation='interventional')
         else:
-            self.strategy = 'permutation'
-            classes = list(model.classes_)
+            # Deux ordres et leurs inverses, communs à toutes les observations.
+            # Le générateur local rend un résultat indépendant des requêtes Streamlit concurrentes.
+            rng = np.random.default_rng(seed)
+            self.orders = []
+            for _ in range(2):
+                order = rng.permutation(len(self.features))
+                self.orders.extend([order, order[::-1]])
 
-            def predict_proba_1(raw):
-                frame = pd.DataFrame(raw, columns=self.features)
-                return model.predict_proba(frame)[:, classes.index(1)]
-
-            self._explainer = shap.Explainer(predict_proba_1, background[self.features])
+    def _permutation_values(self, row):
+        """Estimer les valeurs de Shapley par différences marginales sur quatre chemins."""
+        count = len(self.features)
+        contributions = np.zeros(count)
+        for order in self.orders:
+            # Étape k : les k premières variables de l'ordre prennent leur valeur observée.
+            # Les autres restent celles de chaque cellule-jour du fond, conservées ensemble.
+            in_coalition = np.argsort(order) < np.arange(1, count + 1)[:, None]
+            hybrids = np.where(in_coalition[:, None, :], row, self.background)
+            frame = pd.DataFrame(hybrids.reshape(-1, count), columns=self.features)
+            scores = self.model.predict_proba(frame)[:, self.positive]
+            means = scores.reshape(count, self.background_size).mean(axis=1)
+            contributions[order] += np.diff(means, prepend=self.base)
+        return contributions / len(self.orders)
 
     def __call__(self, frame) -> shap.Explanation:
-        """Contributions additives pour chaque ligne de `frame`."""
-        observed = frame[self.features]
+        if list(frame.columns) != self.features or frame.empty:
+            raise ValueError('Les colonnes expliquées doivent suivre le schéma ordonné du modèle.')
+        raw = frame.to_numpy(dtype=float)
         if self.strategy == 'arbre':
-            transformed = (self._prep.transform(observed) if self._prep is not None
-                           else observed.to_numpy(dtype=float))
-            explanation = self._tree(transformed)
-            values = np.asarray(explanation.values, dtype=float)
-            base = np.asarray(explanation.base_values, dtype=float)
-            if values.ndim == 3:
-                values, base = values[:, :, 1], base[:, 1]
-            return shap.Explanation(values=values, base_values=base,
-                                    data=observed.to_numpy(dtype=float),
-                                    feature_names=self.features)
-        explanation = self._explainer(observed, max_evals=2 * len(self.features) + 1,
-                                      silent=True)
-        if getattr(explanation, 'feature_names', None) is None:
-            explanation.feature_names = list(self.features)
-        return explanation
+            transformed = self.prep.transform(frame) if self.prep is not None else raw
+            explanation = self.tree(transformed)
+            values = explanation.values[:, :, self.positive]
+            bases = explanation.base_values[:, self.positive]
+        else:
+            values = np.stack([self._permutation_values(row) for row in raw])
+            bases = np.full(len(frame), self.base)
+        return shap.Explanation(values=values, base_values=bases, data=raw,
+                                feature_names=self.features)
 
 
-def make_explainer(model, background) -> PipelineExplainer:
-    """Construit l'explicateur adapté au pipeline, sans réentraînement."""
-    return PipelineExplainer(model, background)
+def make_explainer(model, background, seed=42) -> PipelineExplainer:
+    """Construire un explicateur conditionné au modèle et au fond fournis."""
+    return PipelineExplainer(model, background, seed)
