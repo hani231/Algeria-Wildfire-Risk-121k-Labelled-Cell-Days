@@ -8,8 +8,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
+    timeout-minutes: 15
     runs-on: ${{ matrix.os }}
     env:
+      MPLBACKEND: Agg
       PYTHONUTF8: "1"
       OMP_NUM_THREADS: "1"
       OPENBLAS_NUM_THREADS: "1"
@@ -37,4 +39,15 @@ jobs:
             while IFS= read -r line; do echo "::error::$line"; done <<< "$details"
             exit 1
           fi
-      - run: python -m pytest -q
+      - run: python -m pip install pytest-timeout==2.4.0
+      - name: Tester les fonctions du projet
+        shell: bash
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/atlas-pytest.log"
+          if ! python -u -m pytest tests -vv -x --timeout=90 --timeout-method=thread 2>&1 | tee "$log"; then
+            last_test=$(awk '/^tests\// {name=$1} END {print name}' "$log")
+            echo "::error::Échec de pytest pendant $last_test"
+            awk '/^E +/ || /^  File / {print "::warning::" $0}' "$log" | tail -15
+            exit 1
+          fi
